@@ -60,24 +60,7 @@ class StoredProcedureQuery extends Rule {
      */        
     def beforeDelete() {
         if(isSynced) {
-            def comment = "Deleted ${name} StoredProcedureQuery"
-            withJGit { rf ->
-                def relativePath = "ruleSets/${delegate.getPersistentValue('ruleSet').name}/${delegate.name}.json"
-                pull().call()
-                def f = new File(rf,relativePath)
-                if(f.exists()) {
-                    rm().addFilepattern("${relativePath}").call()
-                    f.delete()
-                }
-                { clean ->
-                    if(clean) {
-                        commit().setMessage(comment).call()
-                    } 
-                }.call(status().call().isClean())
-                push().call()
-                pull().call()                
-            }
-            // deleteGitWithComment("Deleted ${name} StoredProcedureQuery")
+            deleteGitWithComment("Deleted ${name} StoredProcedureQuery")
         }
     }
     
