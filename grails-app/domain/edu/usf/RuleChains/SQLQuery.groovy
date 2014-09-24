@@ -50,7 +50,24 @@ class SQLQuery extends Rule {
      */            
     def beforeDelete() {
         if(isSynced) {
-            deleteGitWithComment("Deleted ${name} SQLQuery")
+            // deleteGitWithComment("Deleted ${name} SQLQuery")
+            def comment = "Deleted ${name} SQLQuery"
+            withJGit { rf ->
+                def relativePath = "ruleSets/${delegate.getPersistentValue('ruleSet').name}/${delegate.name}.json"
+                pull().call()
+                def f = new File(rf,relativePath)
+                if(f.exists()) {
+                    rm().addFilepattern("${relativePath}").call()
+                    f.delete()
+                }
+                { clean ->
+                    if(clean) {
+                        commit().setMessage(comment).call()
+                    } 
+                }.call(status().call().isClean())
+                push().call()
+                pull().call()                
+            }            
         }
     }
 }
