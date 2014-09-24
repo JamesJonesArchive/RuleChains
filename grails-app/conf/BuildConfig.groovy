@@ -37,7 +37,7 @@ grails.project.dependency.resolution = {
 
         runtime 'mysql:mysql-connector-java:5.1.24'
         runtime 'postgresql:postgresql:9.1-901.jdbc4'
-        compile "org.eclipse.jgit:org.eclipse.jgit:3.1.0.201310021548-r"
+        // compile "org.eclipse.jgit:org.eclipse.jgit:3.1.0.201310021548-r"
         compile "net.sf.opencsv:opencsv:2.3"
         compile "jcifs:jcifs:1.3.17"
     }
@@ -63,6 +63,7 @@ grails.project.dependency.resolution = {
         compile ':grails-cas-rest-client:0.3.1'
         compile ":quartz2:2.1.6.2"
         compile ":rest:0.7"
+        compile ":jgit:1.0.0a"
         runtime ":cors:1.1.6"
     }
 }
