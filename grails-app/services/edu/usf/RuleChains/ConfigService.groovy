@@ -146,14 +146,15 @@ class ConfigService {
                     }
                 }
                 if(badJob) {
-                    handleGit("Syncronizing removal of bad job ${job.name}") { comment,git,push,gitAuthorInfo ->
-                        git.pull().call()
+                    def comment = "Syncronizing removal of bad job ${job.name}"
+                    withJGit { rf ->
+                        pull().call()
                         def relativePath = "jobs/${job.name}.json"
                         jobFile.delete()
-                        git.rm().addFilepattern("${relativePath}").call()
-                        git.commit().setAuthor(gitAuthorInfo.user,gitAuthorInfo.email).setMessage(comment).call()
-                        push.call()           
-                        git.pull().call()
+                        rm().addFilepattern("${relativePath}").call()
+                        commit().setMessage(comment).call()
+                        push().call()           
+                        pull().call()                        
                     }
                 }
             }

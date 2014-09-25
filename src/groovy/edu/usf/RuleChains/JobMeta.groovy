@@ -80,7 +80,7 @@ class JobMeta {
                         .withIdentity("${name}:${suffix}")
                         .withSchedule(cronSchedule(cronExpression))
                         .forJob(jobKey)
-                        .usingJobData("gitAuthorInfo",delegate.getGitAuthorInfo())
+                        .usingJobData("gitAuthorInfo",delegate.userInfoHandlerService.getGitAuthorInfo())
                         .build();  
 
                         return [
@@ -90,13 +90,14 @@ class JobMeta {
                         return [
                             error: ex.getLocalizedMessage()
                         ]                        
-                    } finally {                                                
-                        delegate.handleGitWithComment("Updating Scheduled Job ${jobKey.name}") { git,gitFolder,comment ->
+                    } finally {             
+                        def comment = "Updating Scheduled Job ${jobKey.name}"
+                        delegate.withJGit { rf ->
                             def jobDetail = quartzScheduler.getJobDetail(jobKey) 
                             def dataMap = jobDetail.getJobDataMap()
-                            def gitAuthorInfo = delegate.getGitAuthorInfo()
                             def relativePath = "jobs/${jobKey.name}.json"
-                            def f = new File(gitFolder,relativePath)
+                            def f = new File(rf,relativePath)
+                            pull().call()
                             f.text = {js->
                                 js.setPrettyPrint(true)
                                 return js                            
@@ -107,11 +108,13 @@ class JobMeta {
                                 chain: dataMap.getString("chain"),
                                 input: dataMap.get("input")
                             ] as JSON)
-                            git.add().addFilepattern("${relativePath}").call()
-                            if(!git.status().call().isClean()) {
-                                git.commit().setAuthor(gitAuthorInfo.user,gitAuthorInfo.email).setMessage(comment).call()
+                            add().addFilepattern("${relativePath}").call()
+                            if(!status().call().isClean()) {
+                                commit().setMessage(comment).call()
                             }
-                        }                                                
+                            push().call()
+                            pull().call()
+                        }
                     }
                 } catch (ex) {                        
                     return [
@@ -120,7 +123,7 @@ class JobMeta {
                 }
             } else {
                 try {
-                    def jobDetail = ClosureJob.createJob(name:"${name}:${suffix}",durability:true,concurrent:false,jobData: [input: input,chain: name,gitAuthorInfo: delegate.getGitAuthorInfo()]){ jobCtx , appCtx->
+                    def jobDetail = ClosureJob.createJob(name:"${name}:${suffix}",durability:true,concurrent:false,jobData: [input: input,chain: name,gitAuthorInfo: delegate.userInfoHandlerService.getGitAuthorInfo()]){ jobCtx , appCtx->
                         log.info "************* it ran ***********"
                         def chain = Chain.findByName(jobCtx.mergedJobDataMap.get('chain'))                        
                         if(!!chain) {
@@ -187,7 +190,7 @@ class JobMeta {
                     groupEquals(quartzScheduler.getJobGroupNames().find { g -> return quartzScheduler.getJobKeys(groupEquals(g)).collect { it.name }.contains(name) })
                 ).find { jk -> return (jk.name == name) }
                 def jobDataMap = quartzScheduler.getJobDetail(jobKey).getJobDataMap()
-                def jobDetail = ClosureJob.createJob(name:"${newName}:${suffix}",durability:true,concurrent:false,jobData: [input: jobDataMap.get("input"),chain: newName,gitAuthorInfo: delegate.getGitAuthorInfo()]){ jobCtx , appCtx->
+                def jobDetail = ClosureJob.createJob(name:"${newName}:${suffix}",durability:true,concurrent:false,jobData: [input: jobDataMap.get("input"),chain: newName,gitAuthorInfo: delegate.userInfoHandlerService.getGitAuthorInfo()]){ jobCtx , appCtx->
                     log.info "************* it ran ***********"
                     def chain = Chain.findByName(jobCtx.mergedJobDataMap.get('chain'))
                     if(!!chain) {
@@ -248,18 +251,21 @@ class JobMeta {
                 quartzScheduler.getJobKeys(groupEquals(g)).findAll { jk ->
                     return (jk.name == name)                           
                 }.each { jk ->
-                    delegate.handleGitWithComment("Removing Scheduled Job ${jk.name}") { git,gitFolder,comment ->
+                    def comment = "Removing Scheduled Job ${jk.name}"
+                    delegate.withJGit { rf ->
                         def relativePath = "jobs/${jk.name}.json"
-                        def gitAuthorInfo = delegate.getGitAuthorInfo()        
-                        def f = new File(gitFolder,relativePath)
+                        def f = new File(rf,relativePath)
+                        pull().call()
                         if(f.exists()) {
                             f.delete()
-                            git.rm().addFilepattern("${relativePath}").call()
-                            if(!git.status().call().isClean()) {
-                                git.commit().setAuthor(gitAuthorInfo.user,gitAuthorInfo.email).setMessage(comment).call()
+                            rm().addFilepattern("${relativePath}").call()
+                            if(!status().call().isClean()) {
+                                commit().setMessage(comment).call()
                             }
+                            push().call()
+                            pull().call()
                         }
-                    }                                            
+                    }
                     // Delete the whole job
                     results << [
                         jobName: jk.name,
@@ -303,13 +309,14 @@ class JobMeta {
                                 jobGroup: g,
                                 unscheduled: quartzScheduler.unscheduleJob(t.getKey())
                             ]
-                        }         
-                        delegate.handleGitWithComment("Saving Scheduled Job ${jk.name}") { git,gitFolder,comment ->
+                        }      
+                        def comment = "Saving Scheduled Job ${jk.name}"
+                        delegate.withJGit { rf ->
                             def jobDetail = quartzScheduler.getJobDetail(jk) 
                             def dataMap = jobDetail.getJobDataMap()
-                            def gitAuthorInfo = delegate.getGitAuthorInfo()
                             def relativePath = "jobs/${jk.name}.json"
-                            def f = new File(gitFolder,relativePath)
+                            def f = new File(rf,relativePath)
+                            pull().call()
                             f.text = {js->
                                 js.setPrettyPrint(true)
                                 return js                            
@@ -320,24 +327,32 @@ class JobMeta {
                                 chain: dataMap.getString("chain"),
                                 input: dataMap.get("input")
                             ] as JSON)
-                            git.add().addFilepattern("${relativePath}").call()
-                            if(!git.status().call().isClean()) {
-                                git.commit().setAuthor(gitAuthorInfo.user,gitAuthorInfo.email).setMessage(comment).call()
+                            add().addFilepattern("${relativePath}").call()
+                            if(!status().call().isClean()) {
+                                commit().setMessage(comment).call()
                             }
-                        }                        
+                            if(!status().call().isClean()) {
+                                commit().setMessage(comment).call()
+                            }
+                            push().call()
+                            pull().call()
+                        }
                     } else {
-                        delegate.handleGitWithComment("Removing Scheduled Job ${jk.name}") { git,gitFolder,comment ->
+                        def comment = "Removing Scheduled Job ${jk.name}"
+                        delegate.withJGit { rf ->
                             def relativePath = "jobs/${jk.name}.json"
-                            def gitAuthorInfo = delegate.getGitAuthorInfo()        
-                            def f = new File(gitFolder,relativePath)
+                            def f = new File(rf,relativePath)
+                            pull().call()
                             if(f.exists()) {
                                 f.delete()
-                                git.rm().addFilepattern("${relativePath}").call()
-                                if(!git.status().call().isClean()) {
-                                    git.commit().setAuthor(gitAuthorInfo.user,gitAuthorInfo.email).setMessage(comment).call()
+                                rm().addFilepattern("${relativePath}").call()
+                                if(!status().call().isClean()) {
+                                    commit().setMessage(comment).call()
                                 }
+                                push().call()
+                                pull().call()
                             }
-                        }                        
+                        }
                         results << [
                             jobName: jk.name,
                             jobGroup: g,
@@ -386,12 +401,13 @@ class JobMeta {
                         }
                         results << scheduleResult
                     }
-                    delegate.handleGitWithComment("Updating Scheduled Job ${jk.name}") { git,gitFolder,comment ->
+                    def comment = "Updating Scheduled Job ${jk.name}"
+                    delegate.withJGit { rf ->
                         def jobDetail = quartzScheduler.getJobDetail(jk) 
                         def dataMap = jobDetail.getJobDataMap()
-                        def gitAuthorInfo = delegate.getGitAuthorInfo()
                         def relativePath = "jobs/${jk.name}.json"
-                        def f = new File(gitFolder,relativePath)
+                        def f = new File(rf,relativePath)
+                        pull().call()
                         f.text = {js->
                             js.setPrettyPrint(true)
                             return js                            
@@ -402,11 +418,13 @@ class JobMeta {
                             chain: dataMap.getString("chain"),
                             input: dataMap.get("input")
                         ] as JSON)
-                        git.add().addFilepattern("${relativePath}").call()
-                        if(!git.status().call().isClean()) {
-                            git.commit().setAuthor(gitAuthorInfo.user,gitAuthorInfo.email).setMessage(comment).call()
+                        add().addFilepattern("${relativePath}").call()
+                        if(!status().call().isClean()) {
+                            commit().setMessage(comment).call()
                         }
-                    }                                                
+                        push().call()
+                        pull().call()
+                    }
                 }
             }
             return (results.find { sch -> "error" in sch })?[ error: results.find { sch -> "error" in sch }.error ]:[ status: results ]
@@ -438,7 +456,7 @@ class JobMeta {
                     .withIdentity("${name}:${suffix}")
                     .withSchedule(cronSchedule(cronExpression))
                     .forJob(jobKey)
-                    .usingJobData("gitAuthorInfo",delegate.getGitAuthorInfo())
+                    .usingJobData("gitAuthorInfo",delegate.userInfoHandlerService.getGitAuthorInfo())
                     .build()
                     return [
                         date: quartzScheduler.scheduleJob(trigger)                                
@@ -448,12 +466,13 @@ class JobMeta {
                         error: ex.getLocalizedMessage()
                     ]                        
                 } finally {
-                    delegate.handleGitWithComment("Updating Scheduled Job ${jobKey.name}") { git,gitFolder,comment ->
+                    def comment = "Updating Scheduled Job ${jobKey.name}"
+                    delegate.withJGit { rf ->
                         def jobDetail = quartzScheduler.getJobDetail(jobKey) 
                         def dataMap = jobDetail.getJobDataMap()
-                        def gitAuthorInfo = delegate.getGitAuthorInfo()
                         def relativePath = "jobs/${jobKey.name}.json"
-                        def f = new File(gitFolder,relativePath)
+                        def f = new File(rf,relativePath)
+                        pull().call()
                         f.text = {js->
                             js.setPrettyPrint(true)
                             return js                            
@@ -464,11 +483,13 @@ class JobMeta {
                             chain: dataMap.getString("chain"),
                             input: dataMap.get("input")
                         ] as JSON)
-                        git.add().addFilepattern("${relativePath}").call()
-                        if(!git.status().call().isClean()) {
-                            git.commit().setAuthor(gitAuthorInfo.user,gitAuthorInfo.email).setMessage(comment).call()
+                        add().addFilepattern("${relativePath}").call()
+                        if(!status().call().isClean()) {
+                            commit().setMessage(comment).call()
                         }
-                    }                                                
+                        push().call()
+                        pull().call()
+                    }
                 }
             }
             return [ error: "Job not found" ]
@@ -507,25 +528,28 @@ class JobMeta {
                     }
                 ]
                 // Git removes this one.
-                delegate.handleGitWithComment("Removing Scheduled Job ${removedJobKey.name}") { git,gitFolder,comment ->
+                def comment = "Removing Scheduled Job ${removedJobKey.name}"
+                delegate.withJGit { rf ->
                     def relativePath = "jobs/${removedJobKey.name}.json"
-                    def gitAuthorInfo = delegate.getGitAuthorInfo()        
-                    def f = new File(gitFolder,relativePath)
+                    def f = new File(rf,relativePath)
                     if(f.exists()) {
                         f.delete()
-                        git.rm().addFilepattern("${relativePath}").call()
-                        if(!git.status().call().isClean()) {
-                            git.commit().setAuthor(gitAuthorInfo.user,gitAuthorInfo.email).setMessage(comment).call()
+                        rm().addFilepattern("${relativePath}").call()
+                        if(!status().call().isClean()) {
+                            commit().setMessage(comment).call()
                         }
+                        push().call()
+                        pull().call()
                     }
                 }
                 // Git updates the merged one
-                delegate.handleGitWithComment("Updating Scheduled Job ${jobKey.name}") { git,gitFolder,comment ->
+                comment = "Updating Scheduled Job ${jobKey.name}"
+                delegate.withJGit { rf ->
                     def jobDetail = quartzScheduler.getJobDetail(jobKey) 
                     def dataMap = jobDetail.getJobDataMap()
-                    def gitAuthorInfo = delegate.getGitAuthorInfo()
                     def relativePath = "jobs/${jobKey.name}.json"
-                    def f = new File(gitFolder,relativePath)
+                    def f = new File(rf,relativePath)
+                    pull().call()
                     f.text = {js->
                         js.setPrettyPrint(true)
                         return js                            
@@ -536,11 +560,13 @@ class JobMeta {
                         chain: dataMap.getString("chain"),
                         input: dataMap.get("input")
                     ] as JSON)
-                    git.add().addFilepattern("${relativePath}").call()
-                    if(!git.status().call().isClean()) {
-                        git.commit().setAuthor(gitAuthorInfo.user,gitAuthorInfo.email).setMessage(comment).call()
+                    add().addFilepattern("${relativePath}").call()
+                    if(!status().call().isClean()) {
+                        commit().setMessage(comment).call()
                     }
-                }                                                                
+                    push().call()
+                    pull().call()
+                }
                 results.delete = quartzScheduler.deleteJob(removedJobKey)
                 return results
             }

@@ -50,7 +50,7 @@ class SQLQuery extends Rule {
      */            
     def beforeDelete() {
         if(isSynced) {
-            deleteGitWithComment("Deleted ${name} SQLQuery")
+            deleteGitWithComment("Deleted ${name} SQLQuery")                       
         }
     }
 }
