@@ -11,6 +11,7 @@ class UserInfoHandlerService {
      * @return                The email address associated or fallback email address if not found
      */
     def resolveEmail() {
+        def username = resolveUsername()
         if(grailsApplication.config.jgit.fallbackMap[username]) {
             return grailsApplication.config.jgit.fallbackMap[username]
         } else {
@@ -42,5 +43,16 @@ class UserInfoHandlerService {
         } catch(e) {
             return grailsApplication.config.jgit.fallbackUsername
         }
+    }
+    /**
+     * Returns a hashmap of the author and email resolution
+     * 
+     * @return               A map containing the username and email address
+     */
+    def getGitAuthorInfo() {
+        return [ 
+            user: resolveUsername(),
+            email: resolveEmail()
+        ]
     }
 }
