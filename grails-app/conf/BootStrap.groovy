@@ -34,23 +34,13 @@ class BootStrap {
             // Building the Meta Programing
             linkMeta.buildMeta(grailsApplication)
             jobMeta.buildMeta(quartzScheduler)
-            gitMeta.buildMeta(grailsApplication,usfCasService)
+            gitMeta.buildMeta(grailsApplication)
             // Added Job Listener for Git Sync'ing
             quartzScheduler.getListenerManager().addJobListener(new RuleChainsJobListener() as JobListener)
             quartzScheduler.getListenerManager().addSchedulerListener(new RuleChainsSchedulerListener())
             print jobService.listChainJobs()
             configService.syncronizeDatabaseFromGit()
         }
-        
-        
-        
-//        FileRepositoryBuilder builder = new FileRepositoryBuilder();
-//        Repository repository = builder.setGitDir(new File("/my/git/directory"))
-//            .readEnvironment() // scan environment GIT_* variables
-//            .findGitDir() // scan up the file system tree
-//            .build();
-//        Git git = new Git(myRepo);
-//        git.commit().setMessage("Fix393").setAuthor(developerIdent).call();
         switch(GrailsUtil.environment){
             case "development":
                 println "#### Development Mode (Start Up)"
