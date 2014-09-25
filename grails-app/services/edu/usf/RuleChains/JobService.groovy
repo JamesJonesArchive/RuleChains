@@ -22,6 +22,7 @@ import grails.util.GrailsUtil
 class JobService {
     static transactional = true
     def grailsApplication
+    def userInfoHandlerService
     /**
      * Adds a new Job History
      * 
