@@ -124,6 +124,17 @@ class GitMeta {
                                 "class": domainDelegate['class']
                             ] as JSON)                        
                         break
+                    case { it instanceof Python }:
+                        println "Writing Python File ${domainDelegate.name}.json"
+                        f.text = {j->
+                            j.setPrettyPrint(true)
+                            return j
+                        }.call([
+                                name: domainDelegate.name,
+                                rule: domainDelegate?.rule,
+                                "class": domainDelegate['class']
+                            ] as JSON)                        
+                        break
                     case { it instanceof PHP }:
                         println "Writing PHP File ${domainDelegate.name}.json"
                         f.text = {j->
