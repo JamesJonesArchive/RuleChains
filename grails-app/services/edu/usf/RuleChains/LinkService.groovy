@@ -1,4 +1,9 @@
 package edu.usf.RuleChains
+
+import javax.script.Bindings
+import javax.script.ScriptEngine
+import javax.script.ScriptEngineManager
+import javax.script.ScriptException
 import grails.converters.*
 import groovy.lang.GroovyShell
 import groovy.lang.Binding
@@ -418,6 +423,62 @@ class LinkService {
                     error: e.message,
                     rule: rule.name,
                     type: "Groovy",
+                    source: sourceName
+                ]                
+            }
+        }
+    }
+    /**
+     * Executes a Python Script
+     * 
+     * @param     rule                   The text code of the rule
+     * @param     sourceName             The string value of the database source to be executed on
+     * @param     executeEnum            The enumerator value indicating how the script will be executed
+     * @param     resultEnum             The enumerator value indicating the result will be handled
+     * @param     input                  A set of parameters used in execution of the script
+     * @return                           An array of objects representing the result of the script
+     * @see       ExecuteEnum
+     * @see       ResultEnum
+     * @see       Rule
+     */
+    def justPython(Rule rule,String sourceName,ExecuteEnum executeEnum,ResultEnum resultEnum,def input) {
+        return Link.withTransaction{ status ->
+            ScriptEngine engine = new ScriptEngineManager().getEngineByName("python")
+            engine.put("row", input)
+            engine.put("rcGlobals", getMergedGlobals().rcGlobals)
+            engine.put("sql",getSQLSource().createConnection())
+            engine.put("sqls",getSQLSources().collectEntries { key, value ->
+                return [key, value.createConnection()]
+            })
+            try {
+                return {rows->
+                    switch(resultEnum) {
+                        case [ ResultEnum.ROW,ResultEnum.APPENDTOROW,ResultEnum.PREPENDTOROW ]:
+                            println "Before ${rows as JSON}"
+                            println "After ${((rows.size() > 0)?rows[0..0]:rows) as JSON}"
+                            return (rows.size() > 0)?rows[0..0]:rows
+                            break
+                        case [ ResultEnum.RECORDSET ]: 
+                            return rows
+                            break
+                        case [ ResultEnum.NONE,ResultEnum.UPDATE ]:
+                            return []
+                            break
+                    }
+                }.call(
+                    engine.eval("""
+                        from java.sql import DriverManager
+                        
+                        ${rule.rule}
+                    """)
+                )
+            } catch(Exception e) {
+                log.debug "${rule.name} error: ${e.printStackTrace()} on source named ${sourceName}"
+                System.out.println("${rule.name} error: ${e.printStackTrace()} on source named ${sourceName}")
+                return [
+                    error: e.message,
+                    rule: rule.name,
+                    type: "Python",
                     source: sourceName
                 ]                
             }
