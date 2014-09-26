@@ -20,7 +20,7 @@ class Python extends Rule {
      */
     def afterInsert() {
         if(isSynced) {
-            saveGitWithComment("Creating ${name} Groovy")
+            saveGitWithComment("Creating ${name} Python")
         }
     }
     /*
@@ -28,7 +28,7 @@ class Python extends Rule {
      */
     def beforeUpdate() {
         if(isSynced) {
-            updateGitWithComment("Renaming ${name} Groovy")
+            updateGitWithComment("Renaming ${name} Python")
         }
     }
     /*
@@ -36,12 +36,12 @@ class Python extends Rule {
      */    
     def afterUpdate() {
         if(isSynced) {
-            saveGitWithComment("Updating ${name} Groovy")
+            saveGitWithComment("Updating ${name} Python")
             /**
              * Anytime a rule is renamed, any link referenced rule name in git repo needs to be updated (if exists)
              **/
             Link.findAllByRule(this).each { l ->
-                l.saveGitWithComment("Updating Link referencing ${name} SQLQuery")
+                l.saveGitWithComment("Updating Link referencing ${name} Python")
             }
         }
     }
@@ -50,7 +50,7 @@ class Python extends Rule {
      */    
     def beforeDelete() {
         if(isSynced) {
-            deleteGitWithComment("Deleted ${name} Groovy")
+            deleteGitWithComment("Deleted ${name} Python")
         }
     }
     
