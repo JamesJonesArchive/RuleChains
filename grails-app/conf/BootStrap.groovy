@@ -10,7 +10,7 @@ import edu.usf.RuleChains.RuleChainsSchedulerListener
 import edu.usf.RuleChains.SQLQuery
 import edu.usf.RuleChains.RuleSet
 import edu.usf.RuleChains.Link
-import edu.usf.RuleChains.LinkMeta
+import edu.usf.RuleChains.ConnectionMeta
 import edu.usf.RuleChains.JobMeta
 import edu.usf.RuleChains.GitMeta
 import edu.usf.RuleChains.Groovy
@@ -24,7 +24,7 @@ class BootStrap {
     def springSecurityService
     def usfCasService
     def configService
-    def linkMeta = new LinkMeta()
+    def connectionMeta = new ConnectionMeta()
     def jobMeta = new JobMeta()
     def gitMeta = new GitMeta()
     def init = { servletContext ->
@@ -32,7 +32,7 @@ class BootStrap {
             print "Didn't get set!"
         } else {
             // Building the Meta Programing
-            linkMeta.buildMeta(grailsApplication)
+            connectionMeta.buildMeta(grailsApplication)
             jobMeta.buildMeta(quartzScheduler)
             gitMeta.buildMeta(grailsApplication)
             // Added Job Listener for Git Sync'ing
