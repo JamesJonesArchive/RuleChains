@@ -446,7 +446,7 @@ class LinkService {
             ScriptEngine engine = new ScriptEngineManager().getEngineByName("python")
             engine.put("row", input)
             engine.put("rcGlobals", getMergedGlobals().rcGlobals)
-            engine.put("sql",getSQLSource().createConnection())
+            engine.put("sql",getSQLSource(sourceName).createConnection())
             engine.put("sqls",getSQLSources().collectEntries { key, value ->
                 return [key, value.createConnection()]
             })
