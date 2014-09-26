@@ -41,7 +41,7 @@ class GitMeta {
      * @param   grailsApplication    The Grails GrailsApplication object
      */        
     def buildMeta = { grailsApplication ->
-        for (domainClass in grailsApplication.domainClasses.findAll { sc -> sc.name in ['DefinedService','SQLQuery','Snippet','StoredProcedureQuery','PHP','Groovy']}) {
+        for (domainClass in grailsApplication.domainClasses.findAll { sc -> sc.name in ['DefinedService','SQLQuery','Snippet','StoredProcedureQuery','PHP','Groovy','Python']}) {
             /**
              * Provides a Git delete method on Rule Domain classes
              * 
