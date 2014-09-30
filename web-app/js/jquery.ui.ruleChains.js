@@ -3294,6 +3294,8 @@
                                 { id: 'SQLQUERY',name:"SQL Query" }, 
                                 { id: 'STOREDPROCEDUREQUERY',name:"StoredProcedure Query" }, 
                                 { id: 'GROOVY',name:"Groovy Script" }, 
+                                { id: 'PYTHON',name:"Python Script" }, 
+                                { id: 'RUBY',name:"Ruby Script" }, 
                                 { id: 'DEFINEDSERVICE', name: "Defined Service" },
                                 { id: 'SNIPPET', name: "Snippet"} 
                             ],function(index,type) {
@@ -3640,6 +3642,74 @@
                                                         }
                                                     },{ 
                                                         mode: "text/x-groovy",
+                                                        tabMode: "indent",
+                                                        indentWithTabs: true,
+                                                        indentUnit: 4,                                                        
+                                                        lineNumbers: true,
+                                                        matchBrackets: true,
+                                                        theme: 'ambiance'
+                                                    });
+                                                    break;
+                                                case "edu.usf.RuleChains.Python":
+                                                    fieldset.find('legend:first').html('Python Script Details');
+                                                    $(nRowData.rule = $('<textarea />')).appendTo(fieldset).html(aData.rule);
+                                                    nRowData.editor = new CodeMirrorUI(nRowData.rule.get(0),{ 
+                                                        path : 'js/codemirror-ui/js', 
+                                                        imagePath: 'js/codemirror-ui/images/silk', 
+                                                        searchMode : 'inline',
+                                                        buttons : ['save','undo','redo','jump','reindent','about'],
+                                                        saveCallback: function() {                                                            
+                                                            var ajax = $.extend({},aData,{
+                                                                rule: {
+                                                                    rule: nRowData.editor.mirror.getValue()
+                                                                },
+                                                                ruleSetName: self.ruleSetSelect.find('option:selected').text()
+                                                            });
+                                                            $.ruleChains.ruleSet.POSTupdateRule(ajax,function(rule) {
+                                                                if("rule" in rule) {                                                                    
+                                                                    aData.rule = nRowData.editor.mirror.getValue();
+                                                                } else {
+                                                                    nRowData.editor.mirror.setValue(aData.rule);
+                                                                    alert(rule.error);
+                                                                }
+                                                            });
+                                                        }
+                                                    },{ 
+                                                        mode: "text/x-python",
+                                                        tabMode: "indent",
+                                                        indentWithTabs: true,
+                                                        indentUnit: 4,                                                        
+                                                        lineNumbers: true,
+                                                        matchBrackets: true,
+                                                        theme: 'ambiance'
+                                                    });
+                                                    break;
+                                                case "edu.usf.RuleChains.Ruby":
+                                                    fieldset.find('legend:first').html('Ruby Script Details');
+                                                    $(nRowData.rule = $('<textarea />')).appendTo(fieldset).html(aData.rule);
+                                                    nRowData.editor = new CodeMirrorUI(nRowData.rule.get(0),{ 
+                                                        path : 'js/codemirror-ui/js', 
+                                                        imagePath: 'js/codemirror-ui/images/silk', 
+                                                        searchMode : 'inline',
+                                                        buttons : ['save','undo','redo','jump','reindent','about'],
+                                                        saveCallback: function() {                                                            
+                                                            var ajax = $.extend({},aData,{
+                                                                rule: {
+                                                                    rule: nRowData.editor.mirror.getValue()
+                                                                },
+                                                                ruleSetName: self.ruleSetSelect.find('option:selected').text()
+                                                            });
+                                                            $.ruleChains.ruleSet.POSTupdateRule(ajax,function(rule) {
+                                                                if("rule" in rule) {                                                                    
+                                                                    aData.rule = nRowData.editor.mirror.getValue();
+                                                                } else {
+                                                                    nRowData.editor.mirror.setValue(aData.rule);
+                                                                    alert(rule.error);
+                                                                }
+                                                            });
+                                                        }
+                                                    },{ 
+                                                        mode: "text/x-ruby",
                                                         tabMode: "indent",
                                                         indentWithTabs: true,
                                                         indentUnit: 4,                                                        
