@@ -169,7 +169,11 @@ class RuleSetService {
                     rule.isSynced = isSynced
                     break
                 case ServiceTypeEnum.PYTHON:
-                    rule = [ name: name, rule: "" ] as Python
+                    rule = [ name: name ] as Python
+                    rule.isSynced = isSynced
+                    break
+                case ServiceTypeEnum.RUBY:
+                    rule = [ name: name ] as Ruby
                     rule.isSynced = isSynced
                     break
                 case ServiceTypeEnum.STOREDPROCEDUREQUERY:
@@ -238,6 +242,9 @@ class RuleSetService {
                     case { it instanceof Python }:
                         er = r as Python
                         break
+                    case { it instanceof Ruby }:
+                        er = r as Ruby
+                        break
                     case { it instanceof PHP }:
                         er = r as PHP
                         break
@@ -304,6 +311,9 @@ class RuleSetService {
                         break
                     case { it instanceof Python }:
                         er = r as Python
+                        break
+                    case { it instanceof Ruby }:
+                        er = r as Ruby
                         break
                     case { it instanceof StoredProcedureQuery }:
                         er = r as StoredProcedureQuery
@@ -387,6 +397,21 @@ class RuleSetService {
                                 break
                             case { it instanceof Python }:
                                 return (Python.createCriteria().get {
+                                        eq('name',r.name)
+                                        resultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP)
+                                        projections {
+                                            property('name', 'name')
+                                            property('rule', 'rule')
+                                            property('id','id')
+                                            property('class', 'class')
+                                        }                        
+                                    } as Map).inject([ruleSet:ruleSetName]) { ds,k,v ->
+                                    ds[k] = v
+                                    return ds                                    
+                                }
+                                break
+                            case { it instanceof Ruby }:
+                                return (Ruby.createCriteria().get {
                                         eq('name',r.name)
                                         resultTransformer(CriteriaSpecification.ALIAS_TO_ENTITY_MAP)
                                         projections {
@@ -534,6 +559,9 @@ class RuleSetService {
                         break
                     case { it instanceof Python }:
                         er = r as Python
+                        break
+                    case { it instanceof Ruby }:
+                        er = r as Ruby
                         break
                     case { it instanceof StoredProcedureQuery }:
                         er = r as StoredProcedureQuery
