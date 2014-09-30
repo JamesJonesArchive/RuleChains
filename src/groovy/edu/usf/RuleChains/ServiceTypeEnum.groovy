@@ -16,6 +16,7 @@ enum ServiceTypeEnum {
     SQLQUERY,
     GROOVY,
     PYTHON,
+    RUBY,
     STOREDPROCEDUREQUERY, 
     DEFINEDSERVICE,
     SNIPPET;
