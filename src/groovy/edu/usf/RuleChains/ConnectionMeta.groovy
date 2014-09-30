@@ -65,7 +65,29 @@ class ConnectionMeta {
                     return m
                 }
             }
-        }        
+            /**
+             * Retrieves the global variables hashmap from the config called "rcGlobals"
+             * and combines it with an optional provided Map and some local variables on the 
+             * current local environment.
+             * 
+             * @param  map       An optional parameter to add key/value pairs to the merge of global and local variables
+             * @return           Returns an Map containing global,local and provided key/value pairs
+             */
+            serviceClass.metaClass.getMergedGlobals { map=[:] ->
+                return [ rcGlobals: (grailsApplication.config.rcGlobals)?grailsApplication.config.rcGlobals:[:] ] + map
+            }
+        }
+        /**
+         * Retrieves the global variables hashmap from the config called "rcGlobals"
+         * and combines it with an optional provided Map and some local variables on the 
+         * current local environment.
+         * 
+         * @param  map       An optional parameter to add key/value pairs to the merge of global and local variables
+         * @return           Returns an Map containing global,local and provided key/value pairs
+         */
+        Chain.metaClass.getMergedGlobals { map=[:] ->      
+            return [ rcGlobals: (grailsApplication.config.rcGlobals)?grailsApplication.config.rcGlobals:[:] ] + map + [ rcLocals: [chain: delegate.name] ]
+        }
     }	
 }
 
