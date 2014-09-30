@@ -4,6 +4,7 @@ import javax.script.Bindings
 import javax.script.ScriptEngine
 import javax.script.ScriptEngineManager
 import javax.script.ScriptException
+import javax.script.ScriptContext
 import grails.converters.*
 import groovy.lang.GroovyShell
 import groovy.lang.Binding
@@ -14,6 +15,10 @@ import oracle.jdbc.driver.OracleTypes
 import groovy.text.*
 import au.com.bytecode.opencsv.*
 import grails.util.Holders
+import org.codehaus.groovy.control.CompilerConfiguration
+import org.codehaus.groovy.control.customizers.ImportCustomizer
+// import groovy.util.DelegatingScript 
+// Not supported until Groovy 2.2 http://groovy.codehaus.org/gapi/groovy/util/DelegatingScript.html
 /**
  * LinkService provides for the execution of various rule types and helper functions.
  * <p>
@@ -24,17 +29,6 @@ import grails.util.Holders
 class LinkService {
     static transactional = true
     def grailsApplication
-    /**
-     * Retrieves the global variables hashmap from the config called "rcGlobals"
-     * and combines it with an optional provided Map and some local variables on the 
-     * current local environment.
-     * 
-     * @param  map       An optional parameter to add key/value pairs to the merge of global and local variables
-     * @return           Returns an Map containing global,local and provided key/value pairs
-     */
-    def getMergedGlobals(def map = [:]) {
-        return [ rcGlobals: (Holders.config.rcGlobals)?Holders.config.rcGlobals:[:] ] + map
-    }
     /**
      * Executes a DefinedService with CAS SpringSecurity authentication
      * 
@@ -245,11 +239,11 @@ class LinkService {
                     switch(resultEnum) {
                         case [ ResultEnum.ROW,ResultEnum.APPENDTOROW,ResultEnum.PREPENDTOROW ]:
                             println "Before ${rows as JSON}"
-                            println "After ${((rows.size() > 0)?rows[0..0]:rows) as JSON}"
-                            return (rows.size() > 0)?rows[0..0]:rows
+                            println "After ${((rows)?((rows.size() > 0)?rows[0..0]:rows):[]) as JSON}"
+                            return (rows)?((rows.size() > 0)?rows[0..0]:rows):[]
                             break
                         case [ ResultEnum.RECORDSET ]: 
-                            return rows
+                            return (rows)?rows:[]
                             break
                         case [ ResultEnum.NONE,ResultEnum.UPDATE ]:
                             return []
@@ -381,40 +375,46 @@ class LinkService {
      * @see       Rule
      */
     def justGroovy(Rule rule,String sourceName,ExecuteEnum executeEnum,ResultEnum resultEnum,def input) {
+        if(groovyRuleEnvironmentService) {
+            println "Not set!!!"
+        }
         return Link.withTransaction{ status ->
-            def sql = getSQLSource(sourceName)
+            def sql = getSQLSource(sourceName) // ,buildGroovyScriptCompilerConfiguration()
             try {
                 return {rows->
                     switch(resultEnum) {
                         case [ ResultEnum.ROW,ResultEnum.APPENDTOROW,ResultEnum.PREPENDTOROW ]:
                             println "Before ${rows as JSON}"
-                            println "After ${((rows.size() > 0)?rows[0..0]:rows) as JSON}"
-                            return (rows.size() > 0)?rows[0..0]:rows
+                            println "After ${((rows)?((rows.size() > 0)?rows[0..0]:rows):[]) as JSON}"
+                            return (rows)?((rows.size() > 0)?rows[0..0]:rows):[]
                             break
                         case [ ResultEnum.RECORDSET ]: 
-                            return rows
+                            return (rows)?rows:[]
                             break
                         case [ ResultEnum.NONE,ResultEnum.UPDATE ]:
                             return []
                             break
                     }
                 }.call(
-                    new GroovyShell(new Binding([
-                        longSQLplaceHolderUniqueVariable:sql,
-                        longSQLSplaceHolderUniqueVariable:getSQLSources(),
-                        longROWplaceHolderVariable: input,
+                    { cl ->
+                        cl.delegate = getGroovyRuleEnvironmentService()
+                        cl.resolveStrategy = Closure.DELEGATE_FIRST
+                        return cl()
+                    }.call((Closure) new GroovyShell(new Binding([
+                        sql:sql,
+                        sqls:getSQLSources(),
+                        row: input,
                         rcGlobals: getMergedGlobals().rcGlobals
-                    ])).evaluate("""
-                        import grails.converters.*
-                        import au.com.bytecode.opencsv.*
+                    ])).evaluate("""${getGroovyRuleImports()}
 
-                        def sql = longSQLplaceHolderUniqueVariable
-                        def sqls = longSQLSplaceHolderUniqueVariable
-                        def row = longROWplaceHolderVariable
+                    {->
+                        sql
+                        sqls
+                        row
                         rcGlobals
 
-                        ${rule.rule}
-                    """)    
+                        ${rule.rule} 
+                    }"""))
                 )
             } catch(Exception e) {
                 log.debug "${rule.name} error: ${e.printStackTrace()} on source named ${sourceName}"
@@ -443,34 +443,96 @@ class LinkService {
      */
     def justPython(Rule rule,String sourceName,ExecuteEnum executeEnum,ResultEnum resultEnum,def input) {
         return Link.withTransaction{ status ->
+            def outName = "out"
             ScriptEngine engine = new ScriptEngineManager().getEngineByName("python")
+            println "Input for script engine is ${input}"
             engine.put("row", input)
             engine.put("rcGlobals", getMergedGlobals().rcGlobals)
             engine.put("sql",getSQLSource(sourceName).createConnection())
-            engine.put("sqls",getSQLSources().collectEntries { key, value ->
-                return [key, value.createConnection()]
+            // Maybe try INJECT. CollectEntries isn't working
+            engine.put("sqls",getSQLSources().inject([:]) {m,k,v ->
+                m["${k}"] = v.createConnection()
+                return m
             })
             try {
                 return {rows->
                     switch(resultEnum) {
                         case [ ResultEnum.ROW,ResultEnum.APPENDTOROW,ResultEnum.PREPENDTOROW ]:
                             println "Before ${rows as JSON}"
-                            println "After ${((rows.size() > 0)?rows[0..0]:rows) as JSON}"
-                            return (rows.size() > 0)?rows[0..0]:rows
+                            println "After ${((rows)?((rows.size() > 0)?rows[0..0]:rows):[]) as JSON}"
+                            return (rows)?((rows.size() > 0)?rows[0..0]:rows):[]
                             break
                         case [ ResultEnum.RECORDSET ]: 
-                            return rows
+                            return (rows)?rows:[]
                             break
                         case [ ResultEnum.NONE,ResultEnum.UPDATE ]:
                             return []
                             break
                     }
                 }.call(
-                    engine.eval("""
-                        from java.sql import DriverManager
-                        
-                        ${rule.rule}
-                    """)
+                    {e,o,r ->
+                        e.eval("""${r}""")
+                        return e.get(o)
+                    }.call(engine,outName,rule.rule)
+                )
+            } catch(Exception e) {
+                log.debug "${rule.name} error: ${e.printStackTrace()} on source named ${sourceName}"
+                System.out.println("${rule.name} error: ${e.printStackTrace()} on source named ${sourceName}")
+                return [
+                    error: e.message,
+                    rule: rule.name,
+                    type: "Python",
+                    source: sourceName
+                ]                
+            }
+        }
+    }
+    /**
+     * Executes a Ruby Script
+     * 
+     * @param     rule                   The text code of the rule
+     * @param     sourceName             The string value of the database source to be executed on
+     * @param     executeEnum            The enumerator value indicating how the script will be executed
+     * @param     resultEnum             The enumerator value indicating the result will be handled
+     * @param     input                  A set of parameters used in execution of the script
+     * @return                           An array of objects representing the result of the script
+     * @see       ExecuteEnum
+     * @see       ResultEnum
+     * @see       Rule
+     */
+    def justRuby(Rule rule,String sourceName,ExecuteEnum executeEnum,ResultEnum resultEnum,def input) {
+        return Link.withTransaction{ status ->
+            def outName = "out"
+            ScriptEngine engine = new ScriptEngineManager().getEngineByName("ruby")
+            println "Input for script engine is ${input}"
+            engine.put("row", input)
+            engine.put("rcGlobals", getMergedGlobals().rcGlobals)
+            engine.put("sql",getSQLSource(sourceName).createConnection())
+            // Maybe try INJECT. CollectEntries isn't working
+            engine.put("sqls",getSQLSources().inject([:]) {m,k,v ->
+                m["${k}"] = v.createConnection()
+                return m
+            })
+            try {
+                return {rows->
+                    switch(resultEnum) {
+                        case [ ResultEnum.ROW,ResultEnum.APPENDTOROW,ResultEnum.PREPENDTOROW ]:
+                            println "Before ${rows as JSON}"
+                            println "After ${((rows)?((rows.size() > 0)?rows[0..0]:rows):[]) as JSON}"
+                            return (rows)?((rows.size() > 0)?rows[0..0]:rows):[]
+                            break
+                        case [ ResultEnum.RECORDSET ]: 
+                            return (rows)?rows:[]
+                            break
+                        case [ ResultEnum.NONE,ResultEnum.UPDATE ]:
+                            return []
+                            break
+                    }
+                }.call(
+                    {e,o,r ->
+                        e.eval("""${r}""")
+                        return e.get(o)
+                    }.call(engine,outName,rule.rule)
                 )
             } catch(Exception e) {
                 log.debug "${rule.name} error: ${e.printStackTrace()} on source named ${sourceName}"
@@ -572,6 +634,5 @@ class LinkService {
                 ]
             }
         }
-    }
-        
+    }        
 }
