@@ -4,8 +4,12 @@
  */
 
 package edu.usf.RuleChains
+
 import edu.usf.RuleChains.LinkService
 import groovy.sql.Sql
+import org.codehaus.groovy.control.CompilerConfiguration
+import org.codehaus.groovy.control.customizers.ImportCustomizer
+
 /**
  * LinkMeta performs all the metaprogramming for the LinkService
  * mainly to handle Groovy SQL and Hibernate sessions
@@ -87,6 +91,23 @@ class ConnectionMeta {
          */
         Chain.metaClass.getMergedGlobals { map=[:] ->      
             return [ rcGlobals: (grailsApplication.config.rcGlobals)?grailsApplication.config.rcGlobals:[:] ] + map + [ rcLocals: [chain: delegate.name] ]
+        }
+        /**
+         * Returns the config string of imports available in Groovy Rule scripts
+         * 
+         * @return   A string block of import statements
+         */
+        LinkService.metaClass.getGroovyRuleImports {->
+            def imports = grailsApplication.config?.rcImports
+            return (imports)?imports:""
+        }
+        /**
+         * This is a workaround to make sure the groovy env is set
+         * 
+         * @return   A GroovyRuleEnvironmentService bean
+         */
+        LinkService.metaClass.getGroovyRuleEnvironmentService {->
+            grailsApplication.mainContext.groovyRuleEnvironmentService
         }
     }	
 }
