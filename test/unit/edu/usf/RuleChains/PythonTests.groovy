@@ -16,7 +16,7 @@ import org.junit.*
  */
 @TestFor(Python)
 class PythonTests {
-/**
+    /**
      * Testing creating a new Python
      */
     void testNewPython() {
