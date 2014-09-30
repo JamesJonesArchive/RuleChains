@@ -9,7 +9,8 @@ package edu.usf.RuleChains
  * @author <a href='mailto:james@mail.usf.edu'>James Jones</a> 
  */ 
 class Python extends Rule {
-    String rule = ""
+    String rule = """# Output must be saved to this variable
+out = []"""
     static constraints = {
     }
     static mapping = {
