@@ -40,7 +40,7 @@ grails.project.dependency.resolution = {
         // compile "org.eclipse.jgit:org.eclipse.jgit:3.1.0.201310021548-r"
         compile "net.sf.opencsv:opencsv:2.3"
         compile "jcifs:jcifs:1.3.17"
-        //runtime 'org.jruby:jruby:1.6.4'
+        runtime 'org.jruby:jruby:1.7.15'
         runtime 'org.python:jython-standalone:2.5.3'
     }
 
