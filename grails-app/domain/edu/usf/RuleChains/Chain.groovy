@@ -108,17 +108,6 @@ class Chain {
             (new RuleSetService()).deleteRule(s.ruleSet.name,s.name)
         }
     }
-    /**
-     * Retrieves the global variables hashmap from the config called "rcGlobals"
-     * and combines it with an optional provided Map and some local variables on the 
-     * current local environment.
-     * 
-     * @param  map       An optional parameter to add key/value pairs to the merge of global and local variables
-     * @return           Returns an Map containing global,local and provided key/value pairs
-     */
-    def getMergedGlobals(def map = [:]) {        
-        return [ rcGlobals: (Holders.config.rcGlobals)?Holders.config.rcGlobals:[:] ] + map + [ rcLocals: [chain: name] ]
-    }
     /*
      * Retrieves the links from this chain ordered by sequence number
      * 
@@ -305,6 +294,104 @@ class Chain {
                             return Chain.rearrange(it,orderedLinks[i].outputReorder)
                         }
                         break
+                    case { it instanceof Python }:
+                        jobHistory.appendToLog("[Python] Detected a Python script for ${orderedLinks[i].rule.name}")                        
+                        log.info "Detected a Python Script for ${orderedLinks[i].rule.name}"
+                        orderedLinks[i].rule.jobHistory = jobHistory
+                        orderedLinks[i].output = { r ->
+                            if([Collection, Object[]].any { it.isAssignableFrom(r.getClass()) }) {
+                                switch(r) {
+                                    case r.isEmpty():
+                                        return r
+                                        break
+                                    case [Collection, Object[]].any { it.isAssignableFrom(r[0].getClass()) }:
+                                        return r
+                                        break
+                                    default:
+                                        return r
+                                        break
+                                }
+                                return r
+                            } else {
+                                jobHistory.appendToLog("[Python] Object needs to be an array of objects so wrapping it as an array like this ${[r] as JSON}") 
+                                return [ r ] 
+                            }
+                        }.call(linkService.justPython(
+                            orderedLinks[i].rule,
+                            orderedLinks[i].sourceName,
+                            orderedLinks[i].executeEnum,    
+                            orderedLinks[i].resultEnum,
+                            { e ->
+                                switch(e) {
+                                    case ExecuteEnum.EXECUTE_USING_ROW: 
+                                        jobHistory.appendToLog("[Python] Execute Using Row being used")
+                                        jobHistory.appendToLog("[Python] Unmodified input for Executing Row on link ${i} is ${orderedLinks[i].input as JSON}")
+                                        jobHistory.appendToLog("[Python] Modified input for Executing Row link ${i} is ${Chain.rearrange(orderedLinks[i].input,orderedLinks[i].inputReorder) as JSON}")                                        
+                                        return Chain.rearrange(orderedLinks[i].input,orderedLinks[i].inputReorder)
+                                        break
+                                    default:
+                                        return [:]
+                                        break
+                                }                                        
+                            }.call(orderedLinks[i].executeEnum)
+                        )).collect {
+                            if(orderedLinks[i].resultEnum in [ResultEnum.APPENDTOROW]) {
+                                return Chain.rearrange((([:] << orderedLinks[i].input) << it),orderedLinks[i].outputReorder)
+                            } else if(orderedLinks[i].resultEnum in [ResultEnum.PREPENDTOROW]) {
+                                return Chain.rearrange((([:] << it) << orderedLinks[i].input),orderedLinks[i].outputReorder)
+                            }
+                            return Chain.rearrange(it,orderedLinks[i].outputReorder)
+                        }
+                        break                        
+                    case { it instanceof Ruby }:
+                        jobHistory.appendToLog("[Ruby] Detected a Ruby script for ${orderedLinks[i].rule.name}")                        
+                        log.info "Detected a Ruby Script for ${orderedLinks[i].rule.name}"
+                        orderedLinks[i].rule.jobHistory = jobHistory
+                        orderedLinks[i].output = { r ->
+                            if([Collection, Object[]].any { it.isAssignableFrom(r.getClass()) }) {
+                                switch(r) {
+                                    case r.isEmpty():
+                                        return r
+                                        break
+                                    case [Collection, Object[]].any { it.isAssignableFrom(r[0].getClass()) }:
+                                        return r
+                                        break
+                                    default:
+                                        return r
+                                        break
+                                }
+                                return r
+                            } else {
+                                jobHistory.appendToLog("[Ruby] Object needs to be an array of objects so wrapping it as an array like this ${[r] as JSON}") 
+                                return [ r ] 
+                            }
+                        }.call(linkService.justRuby(
+                            orderedLinks[i].rule,
+                            orderedLinks[i].sourceName,
+                            orderedLinks[i].executeEnum,    
+                            orderedLinks[i].resultEnum,
+                            { e ->
+                                switch(e) {
+                                    case ExecuteEnum.EXECUTE_USING_ROW: 
+                                        jobHistory.appendToLog("[Ruby] Execute Using Row being used")
+                                        jobHistory.appendToLog("[Ruby] Unmodified input for Executing Row on link ${i} is ${orderedLinks[i].input as JSON}")
+                                        jobHistory.appendToLog("[Ruby] Modified input for Executing Row link ${i} is ${Chain.rearrange(orderedLinks[i].input,orderedLinks[i].inputReorder) as JSON}")                                        
+                                        return Chain.rearrange(orderedLinks[i].input,orderedLinks[i].inputReorder)
+                                        break
+                                    default:
+                                        return [:]
+                                        break
+                                }                                        
+                            }.call(orderedLinks[i].executeEnum)
+                        )).collect {
+                            if(orderedLinks[i].resultEnum in [ResultEnum.APPENDTOROW]) {
+                                return Chain.rearrange((([:] << orderedLinks[i].input) << it),orderedLinks[i].outputReorder)
+                            } else if(orderedLinks[i].resultEnum in [ResultEnum.PREPENDTOROW]) {
+                                return Chain.rearrange((([:] << it) << orderedLinks[i].input),orderedLinks[i].outputReorder)
+                            }
+                            return Chain.rearrange(it,orderedLinks[i].outputReorder)
+                        }
+                        break                        
                     case { it instanceof PHP }:
                         jobHistory.appendToLog("[PHP] Detected a PHP script for ${orderedLinks[i].rule.name}")                        
                         log.info "Detected a PHP Script for ${orderedLinks[i].rule.name}"

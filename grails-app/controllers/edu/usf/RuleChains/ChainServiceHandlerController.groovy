@@ -25,31 +25,24 @@ class ChainServiceHandlerController {
      * @see    ChainServiceHandler
      */     
     def handleChainService() {
+        def handlerResult = { fparms ->
+            return chainServiceHandlerService.handleChainService(params.handler,request.method,fparms)
+        }.call(params.inject([:]) {m,k,v ->
+            if(!(k in ['handler','action','controller'])) {
+                m[k] = v
+            }
+            return m
+        })
         withFormat {
+            json {
+                JSON.use("deep") { render handlerResult as JSON }
+            }
             html {
-                JSON.use("deep") { render (chainServiceHandlerService.handleChainService(params.handler,request.method,params.inject([:]) {m,k,v ->
-                    if(!(k in ['handler','action','controller'])) {
-                        m[k] = v
-                    }
-                    return m
-                })) as JSON }
+                JSON.use("deep") { render handlerResult as JSON }
             }
             xml {
-                render (chainServiceHandlerService.handleChainService(params.handler,request.method,params.inject([:]) {m,k,v ->
-                    if(!(k in ['handler','action','controller'])) {
-                        m[k] = v
-                    }
-                    return m
-                })) as XML
-            }
-            json {
-                JSON.use("deep") { render (chainServiceHandlerService.handleChainService(params.handler,request.method,params.inject([:]) {m,k,v ->
-                    if(!(k in ['handler','action','controller'])) {
-                        m[k] = v
-                    }
-                    return m
-                })) as JSON }
-            }
+                render handlerResult as XML
+           }
         }        
     }
     /**

@@ -5,6 +5,7 @@ grails.project.test.reports.dir = "target/test-reports"
 grails.project.target.level = 1.6
 grails.project.source.level = 1.6
 //grails.project.war.file = "target/${appName}-${appVersion}.war"
+grails.project.war.file = "target/${appName}.war"
 
 grails.project.dependency.resolution = {
     // inherit Grails' default dependencies
@@ -34,11 +35,17 @@ grails.project.dependency.resolution = {
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
 
-        runtime 'mysql:mysql-connector-java:5.1.24'
-        runtime 'postgresql:postgresql:9.1-901.jdbc4'
-        compile "org.eclipse.jgit:org.eclipse.jgit:3.1.0.201310021548-r"
-        compile "net.sf.opencsv:opencsv:2.3"
-        compile "jcifs:jcifs:1.3.17"
+        runtime 'mysql:mysql-connector-java:5.1.33'
+        runtime 'org.postgresql:postgresql:9.3-1102-jdbc41'
+        // runtime 'postgresql:postgresql:9.1-901.jdbc4'
+        // compile "org.eclipse.jgit:org.eclipse.jgit:3.1.0.201310021548-r"
+        // compile "net.sf.opencsv:opencsv:2.3"
+        // compile "jcifs:jcifs:1.3.17"
+        compile 'org.apache-extras.camel-extra:camel-jcifs:2.13.2'
+        compile "javax.mail:mail:1.4"
+        compile "com.xlson.groovycsv:groovycsv:1.0"
+        runtime 'org.jruby:jruby:1.7.15'
+        runtime 'org.python:jython-standalone:2.5.3'
     }
 
     plugins {
@@ -62,5 +69,8 @@ grails.project.dependency.resolution = {
         compile ':grails-cas-rest-client:0.3.1'
         compile ":quartz2:2.1.6.2"
         compile ":rest:0.7"
+        compile ":jgit:1.0.0a"
+        compile ":csv:0.3.1"
+        runtime ":cors:1.1.6"
     }
 }
