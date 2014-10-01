@@ -15,6 +15,8 @@ package edu.usf.RuleChains
 enum ServiceTypeEnum {
     SQLQUERY,
     GROOVY,
+    PYTHON,
+    RUBY,
     STOREDPROCEDUREQUERY, 
     DEFINEDSERVICE,
     SNIPPET;

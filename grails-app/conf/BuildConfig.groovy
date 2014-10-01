@@ -38,8 +38,12 @@ grails.project.dependency.resolution = {
         runtime 'mysql:mysql-connector-java:5.1.24'
         runtime 'postgresql:postgresql:9.1-901.jdbc4'
         // compile "org.eclipse.jgit:org.eclipse.jgit:3.1.0.201310021548-r"
-        compile "net.sf.opencsv:opencsv:2.3"
+        // compile "net.sf.opencsv:opencsv:2.3"
         compile "jcifs:jcifs:1.3.17"
+        compile "javax.mail:mail:1.4"
+        compile "com.xlson.groovycsv:groovycsv:1.0"
+        runtime 'org.jruby:jruby:1.7.15'
+        runtime 'org.python:jython-standalone:2.5.3'
     }
 
     plugins {
@@ -64,6 +68,7 @@ grails.project.dependency.resolution = {
         compile ":quartz2:2.1.6.2"
         compile ":rest:0.7"
         compile ":jgit:1.0.0a"
+        compile ":csv:0.3.1"
         runtime ":cors:1.1.6"
     }
 }
