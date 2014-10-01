@@ -35,11 +35,13 @@ grails.project.dependency.resolution = {
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
 
-        runtime 'mysql:mysql-connector-java:5.1.24'
-        runtime 'postgresql:postgresql:9.1-901.jdbc4'
+        runtime 'mysql:mysql-connector-java:5.1.33'
+        runtime 'org.postgresql:postgresql:9.3-1102-jdbc41'
+        // runtime 'postgresql:postgresql:9.1-901.jdbc4'
         // compile "org.eclipse.jgit:org.eclipse.jgit:3.1.0.201310021548-r"
         // compile "net.sf.opencsv:opencsv:2.3"
-        compile "jcifs:jcifs:1.3.17"
+        // compile "jcifs:jcifs:1.3.17"
+        compile 'org.apache-extras.camel-extra:camel-jcifs:2.13.2'
         compile "javax.mail:mail:1.4"
         compile "com.xlson.groovycsv:groovycsv:1.0"
         runtime 'org.jruby:jruby:1.7.15'
