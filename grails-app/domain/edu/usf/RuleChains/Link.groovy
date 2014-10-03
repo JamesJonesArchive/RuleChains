@@ -43,19 +43,16 @@ class Link {
         inputReorder(blank:true)
         outputReorder(blank:true)
         executeEnum( 
-            blank: false,
             validator: { val, obj -> 
                 return val.name() in ExecuteEnum.values().collect { it.name() }
             }        
         )
         resultEnum( 
-            blank: false,
             validator: { val, obj -> 
                 return val.name() in ResultEnum.values().collect { it.name() }
             }        
         )
         linkEnum( 
-            blank: false,
             validator: { val, obj -> 
                 return val.name() in LinkEnum.values().collect { it.name() }
             }        
