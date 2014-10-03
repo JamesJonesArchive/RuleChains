@@ -124,28 +124,25 @@ class JobMeta {
             } else {
                 try {
                     def jobDetail = ClosureJob.createJob(name:"${name}:${suffix}",durability:true,concurrent:false,jobData: [input: input,chain: name,gitAuthorInfo: delegate.userInfoHandlerService.getGitAuthorInfo()]){ jobCtx , appCtx->
-                        log.info "************* it ran ***********"
                         def chain = Chain.findByName(jobCtx.mergedJobDataMap.get('chain'))                        
                         if(!!chain) {
-                            // Attaches a JobHistory to the Chain as a transient
-                            chain.jobHistory = { jh,d -> 
-                                if('error' in jh) {
-                                    log.info "Creating a new job history"
-                                    jh = d.addJobHistory("${name}:${suffix}")
-                                    return ('error' in jh)?null:jh.jobHistory
-                                }
-                                return jh.jobHistory
-                            }.call(delegate.findJobHistory("${name}:${suffix}"),delegate)
-                            if(!!chain.jobHistory) {
-                                chain.jobHistory.updateJobProperties(jobCtx)
-                            } else {
-                                log.error "Job History is NULL and won't be used to log execution"
-                            }
+                            // Attaches a JobInfo map to the chain as a transient
+                            chain.jobInfo = [
+                                chain:name,
+                                suffix:suffix,
+                                description: ((!!!!jobCtx.getJobDetail().getDescription())?jobCtx.getJobDetail().getDescription():""),
+                                groupName: jobCtx.getJobDetail().getKey().getGroup(),
+                                cron: { t ->
+                                    return t.metaClass.respondsTo(t, 'getCronExpression')?t.getCronExpression():""
+                                }.call(jobCtx.getTrigger()),
+                                fireTime: jobCtx.getFireTime(),
+                                scheduledFireTime: jobCtx.getScheduledFireTime()   
+                            ]
                             def result = chain.execute(jobCtx.mergedJobDataMap.get('input'))
-                            println "Result is ${result}"
-                            chain.jobHistory.appendToLog("[Finished] ${name}:${suffix}")                            
+                            delegate.log.info("[Chain:${name}:${suffix}][${name}][RESULT] ${result as JSON}")
+                            delegate.log.info("[Chain:${name}:${suffix}][${name}][END_EXECUTE] Chain ${name}:${suffix}")
                         } else {
-                            log.error "Chain not found ${jobCtx.mergedJobDataMap.get('chain')}"
+                            delegate.log.info("[Chain:${name}:${suffix}][${name}][END_EXECUTE] Chain not found: ${name}")
                         }
                     }
                     try {
@@ -191,27 +188,25 @@ class JobMeta {
                 ).find { jk -> return (jk.name == name) }
                 def jobDataMap = quartzScheduler.getJobDetail(jobKey).getJobDataMap()
                 def jobDetail = ClosureJob.createJob(name:"${newName}:${suffix}",durability:true,concurrent:false,jobData: [input: jobDataMap.get("input"),chain: newName,gitAuthorInfo: delegate.userInfoHandlerService.getGitAuthorInfo()]){ jobCtx , appCtx->
-                    log.info "************* it ran ***********"
                     def chain = Chain.findByName(jobCtx.mergedJobDataMap.get('chain'))
                     if(!!chain) {
-                        // Attaches a JobHistory to the Chain as a transient
-                        chain.jobHistory = { jh,d -> 
-                            if('error' in jh) {
-                                log.info "Creating a new job history"
-                                jh = d.addJobHistory("${name}:${suffix}")
-                                return ('error' in jh)?null:jh.jobHistory
-                            }
-                            return jh.jobHistory
-                        }.call(delegate.findJobHistory("${name}:${suffix}"),delegate)
-                        if(!!chain.jobHistory) {
-                            chain.jobHistory.updateJobProperties(jobCtx)
-                        } else {
-                            log.error "Job History is NULL and won't be used to log execution"
-                        }
+                        // Attaches a JobInfo map to the chain as a transient
+                        chain.jobInfo = [
+                            chain:newName,
+                            suffix:suffix,
+                            description: ((!!!!jobCtx.getJobDetail().getDescription())?jobCtx.getJobDetail().getDescription():""),
+                            groupName: jobCtx.getJobDetail().getKey().getGroup(),
+                            cron: { t ->
+                                return t.metaClass.respondsTo(t, 'getCronExpression')?t.getCronExpression():""
+                            }.call(jobCtx.getTrigger()),
+                            fireTime: jobCtx.getFireTime(),
+                            scheduledFireTime: jobCtx.getScheduledFireTime()   
+                        ]
                         def result = chain.execute(jobCtx.mergedJobDataMap.get('input'))
-                        println "Result is ${result}"
+                        delegate.log.info("[Chain:${newName}:${suffix}][${newName}][RESULT] ${result as JSON}")
+                        delegate.log.info("[Chain:${newName}:${suffix}][${newName}][END_EXECUTE] Chain ${newName}:${suffix}")
                     } else {
-                        log.error "Chain not found ${jobCtx.mergedJobDataMap.get('chain')}"                        
+                        delegate.log.info("[Chain:${newName}:${suffix}][${newName}][END_EXECUTE] Chain not found: ${newName}")
                     }
                 }
                 quartzScheduler.scheduleJobs([
