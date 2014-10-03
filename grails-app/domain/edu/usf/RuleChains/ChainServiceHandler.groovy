@@ -51,7 +51,6 @@ class ChainServiceHandler {
         outputReorder(blank:true) 
         chain(nullable:false)
         method( 
-            blank: false,
             validator: { val, obj -> 
                 return val.name() in MethodEnum.values().collect { it.name() }                
             }        
