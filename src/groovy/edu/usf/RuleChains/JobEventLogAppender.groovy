@@ -10,6 +10,8 @@ import org.apache.log4j.Appender
 import org.apache.log4j.AppenderSkeleton
 import org.apache.log4j.spi.LoggingEvent
 import grails.converters.*
+import java.util.regex.*
+
 /**
  *
  * @author james
@@ -38,14 +40,25 @@ class JobEventLogAppender extends AppenderSkeleton implements Appender {
             String eventMessage = (event.getMessage())?event.getMessage().toString():"";
             
             if(event.getLevel() == org.apache.log4j.Level.INFO && eventMessage.startsWith("[Chain:")) {
-                // use new transaction so that the log entry will be written even if the currently running transaction is rolled back
-                JobEventLog.withNewTransaction {
-                    JobEventLog eventLog = new JobEventLog()
-                    eventLog.message = limit((eventMessage ?: "Not details available, something is wrong"), JobEventLog.MESSAGE_MAXSIZE)
-                    eventLog.details = limit((logStatement ?: "Not details available, something is wrong"), JobEventLog.DETAILS_MAXSIZE)
-                    eventLog.source = limit(source ?: "Source not set", JobEventLog.SOURCE_MAXSIZE)
-                    eventLog.save()
-                }
+                String logEntryPattern = "^\\[Chain:(\\w+):(\\d+)\\]\\[(\\w+)\\]\\[(\\w+)\\] (\\w.*)"
+                Pattern p = Pattern.compile(logEntryPattern)
+                Matcher matcher = p.matcher(eventMessage)
+                def matches = [:]
+                if (matcher.matches()) {
+                    // use new transaction so that the log entry will be written even if the currently running transaction is rolled back
+                    JobEventLog.withNewTransaction {
+                        JobEventLog eventLog = new JobEventLog()
+                        eventLog.message = limit((eventMessage ?: "Not details available, something is wrong"), JobEventLog.MESSAGE_MAXSIZE)
+                        eventLog.details = limit((logStatement ?: "Not details available, something is wrong"), JobEventLog.DETAILS_MAXSIZE)
+                        eventLog.source = limit(source ?: "Source not set", JobEventLog.SOURCE_MAXSIZE)
+                        eventLog.scheduledChain = matcher.group(1)
+                        eventLog.scheduledUniqueJobId = matcher.group(2)
+                        eventLog.currentRunningChain = matcher.group(3)
+                        eventLog.currentOperation = matcher.group(4)
+                        eventLog.status = matcher.group(5)
+                        eventLog.save()
+                    }
+                }                
             }
         } else {
             // println "JobEventLogAppender not initialized"
