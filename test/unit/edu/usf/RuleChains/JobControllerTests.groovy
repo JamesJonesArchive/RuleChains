@@ -2,6 +2,7 @@ package edu.usf.RuleChains
 
 
 
+import grails.converters.JSON
 import grails.test.mixin.*
 import org.junit.*
 import org.hibernate.criterion.CriteriaSpecification
@@ -15,7 +16,7 @@ import groovy.time.*
  * See the API for {@link grails.test.mixin.web.ControllerUnitTestMixin} for usage instructions
  */
 @TestFor(JobController)
-@Mock([JobService,JobHistory,JobLog])
+@Mock([JobService,JobEventLog])
 class JobControllerTests {
     /**
      * Tests a list of available quartz jobs
@@ -335,8 +336,29 @@ class JobControllerTests {
         def control = mockFor(JobService)
         control.demand.getJobLogs { String name,Integer records,Integer offset-> 
             [
-                [ 
-                    jobHistory: [
+                [
+                    status: "Line 1",
+                    currentOperation: "INFO",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date()
+                ] as JobEventLog,
+                [
+                    status: "Line 2",
+                    currentOperation: "INFO",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date()
+                ] as JobEventLog,
+                [
+                    status: "Line 3",
+                    currentOperation: "INFO",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date()
+                ] as JobEventLog,
+                [
+                    status: """JobInfo ${[
                         name: "testChain:1234",
                         chain: "testChain",
                         groupName: "default",
@@ -344,40 +366,25 @@ class JobControllerTests {
                         cron: "0 0 0 0 ? 2014",
                         fireTime: new Date(),
                         scheduledFireTime: new Date()
-                    ] as JobHistory,
-                    jobLogs: [
-                        [
-                            line: "Line 1",
-                            logTime: new Date()
-                        ] as JobLog,
-                        [
-                            line: "Line 2",
-                            logTime: new Date()
-                        ] as JobLog,
-                        [
-                            line: "Line 3",
-                            logTime: new Date()
-                        ] as JobLog,
-                        [
-                            line: "Line 4",
-                            logTime: new Date()
-                        ] as JobLog                        
-                    ]
-                ]
-            ].each { jh -> 
-                jh.jobHistory.save()
-                jh.jobLogs.each { jl ->
-                    jh.jobHistory.addToJobLogs(jl)
-                    jh.jobHistory.save()
-                }
+                    ] as JSON}""",
+                    currentOperation: "SUMMARY",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date()
+                ] as JobEventLog                        
+            ].each { jl -> 
+                jl.message = jl.status
+                jl.source = "RuleChains"
+                jl.save()
             }
-            def jobHistory = JobHistory.findByName(name.trim())
+            def (chain, suffix) = name.trim().tokenize( ':' )
             return [
-                jobLogs: JobLog.createCriteria().list(sort: 'id', order:'desc', max: records, offset: offset) {
-                    eq('jobHistory',jobHistory)
+                jobLogs: JobEventLog.createCriteria().list(sort: 'id', order:'desc', max: records, offset: offset) {
+                    eq('scheduledChain',chain)
+                    eq('scheduledUniqueJobId',suffix)
                 },
-                jobHistories: JobHistory.list(),
-                total: JobLog.countByJobHistory(jobHistory)
+                jobHistories: JobEventLog.findAllByCurrentOperation('SUMMARY'),
+                total: JobEventLog.countByScheduledChainAndScheduledUniqueJobId(chain,suffix)
             ]            
         }
         controller.jobService = control.createMock()
@@ -402,65 +409,75 @@ class JobControllerTests {
         control.demand.getJobRuleTimings { String name,Integer records,Integer offset-> 
             def now = new Date()
             use (TimeCategory) {
-                [
-                    [ 
-                        jobHistory: [
+                [                    
+                    [
+                        status: "Detected a SQLQuery for mySQL1",
+                        currentOperation: "SQLQuery",
+                        scheduledChain: "testChain",
+                        scheduledUniqueJobId: "1234",
+                        dateCreated: new Date() + 1.seconds
+                    ] as JobEventLog,
+                    [
+                        status: "Detected a SQLQuery for mySQL2",
+                        currentOperation: "SQLQuery",
+                        scheduledChain: "testChain",
+                        scheduledUniqueJobId: "1234",
+                        dateCreated: new Date() + 2.seconds
+                    ] as JobEventLog,
+                    [
+                        status: "Detected a SQLQuery for mySQL3",
+                        currentOperation: "SQLQuery",
+                        scheduledChain: "testChain",
+                        scheduledUniqueJobId: "1234",
+                        dateCreated: new Date() + 3.seconds
+                    ] as JobEventLog,
+                    [
+                        status: """JobInfo ${[
                             name: "testChain:1234",
                             chain: "testChain",
                             groupName: "default",
                             description: "",
                             cron: "0 0 0 0 ? 2014",
                             fireTime: new Date(),
-                            scheduledFireTime: new Date()
-                        ] as JobHistory,
-                        jobLogs: [
-                            [
-                                line: "Line 1",
-                                logTime: new Date() + 1.seconds
-                            ] as JobLog,
-                            [
-                                line: "Line 2",
-                                logTime: new Date() + 2.seconds
-                            ] as JobLog,
-                            [
-                                line: "Line 3",
-                                logTime: new Date() + 3.seconds
-                            ] as JobLog,
-                            [
-                                line: "Line 4",
-                                logTime: new Date() + 4.seconds
-                            ] as JobLog                        
-                        ]
-                    ]
-                ].each { jh -> 
-                    jh.jobHistory.save()
-                    jh.jobLogs.each { jl ->
-                        jh.jobHistory.addToJobLogs(jl)
-                        jh.jobHistory.save()
-                    }
+                            scheduledFireTime: new Date() + 4.seconds
+                        ] as JSON}""",
+                        currentOperation: "SUMMARY",
+                        scheduledChain: "testChain",
+                        scheduledUniqueJobId: "1234",
+                        dateCreated: new Date()
+                    ] as JobEventLog                        
+                ].each { jl -> 
+                    jl.message = jl.status
+                    jl.source = "RuleChains"
+                    jl.save()
                 }
             }
-            def jobHistory = JobHistory.findByName(name.trim())
+            def (chain, suffix) = name.trim().tokenize( ':' )
+            def ruleFilter = ['Groovy','Python','Ruby','SQLQuery','StoredProcedureQuery','DefinedService','Snippet']
+            def endTime = JobEventLog.createCriteria().get {
+                eq('scheduledChain',chain)
+                eq('scheduledUniqueJobId',suffix)
+                projections {
+                    max('dateCreated')
+                }
+            }
             return [
                 jobLogs: { jls ->
-                    def endTime = JobLog.createCriteria().get {
-                        eq('jobHistory',jobHistory)
-                        projections {
-                            max('logTime')
-                        }
-                    }
                     jls.reverse().collect { jl ->
                         def jlobj = jl.properties as Map
-                        jlobj.duration = TimeCategory.minus(endTime, jl.logTime).toString()
-                        endTime = jl.logTime
+                        jlobj.duration = TimeCategory.minus(endTime, jl.dateCreated).toString()
+                        endTime = jl.dateCreated
                         // jl.ruleName = jl.line.tokenize().last()
                         return jlobj                            
                     }
-                }.call(JobLog.createCriteria().list(sort: 'id', order:'desc', max: records, offset: offset) {
-                    eq('jobHistory',jobHistory)
+                }.call(JobEventLog.createCriteria().list(sort: 'id', order:'desc', max: records, offset: offset) {
+                    eq('scheduledChain',chain)
+                    eq('scheduledUniqueJobId',suffix)
+                    inList('currentOperation',ruleFilter)
+                    like('status','Detected a % for%')
                 }),
-                jobHistories: JobHistory.list(),
-                total: JobLog.countByJobHistory(jobHistory)
+                jobHistories: JobEventLog.findAllByCurrentOperation('SUMMARY'),
+                total: JobEventLog.findAllByScheduledChainAndScheduledUniqueJobIdAndStatusLikeAndCurrentOperationInList(chain,suffix,'Detected a % for%',ruleFilter).size()
             ]            
         }
         controller.jobService = control.createMock()
@@ -469,7 +486,7 @@ class JobControllerTests {
         // controller.request.content = (["pattern": null] as JSON).toString().getBytes()
         def model = controller.getJobRuleTimings()
         assert model.jobLogs.size() == 3    
-        assert model.jobLogs.last().logTime > model.jobLogs.first().logTime
+        assert model.jobLogs.last().dateCreated > model.jobLogs.first().dateCreated
     }
     /**
      * Tests returning a list of available Job Histories
@@ -481,62 +498,51 @@ class JobControllerTests {
         control.demand.getJobHistories { -> 
             def now = new Date()
             use (TimeCategory) {
-                [
-                    [ 
-                        jobHistory: [
-                            name: "testChain:1234",
-                            chain: "testChain",
-                            groupName: "default",
-                            description: "",
-                            cron: "0 0 0 0 ? 2014",
+                [                    
+                    [
+                        status: "Detected a SQLQuery for mySQL1",
+                        currentOperation: "SQLQuery",
+                        scheduledChain: "testChain",
+                        scheduledUniqueJobId: "1234",
+                        dateCreated: new Date() + 1.seconds
+                    ] as JobEventLog,
+                    [
+                        status: "Detected a SQLQuery for mySQL2",
+                        currentOperation: "SQLQuery",
+                        scheduledChain: "testChain",
+                        scheduledUniqueJobId: "1234",
+                        dateCreated: new Date() + 2.seconds
+                    ] as JobEventLog,
+                    [
+                        status: "Detected a SQLQuery for mySQL3",
+                        currentOperation: "SQLQuery",
+                        scheduledChain: "testChain",
+                        scheduledUniqueJobId: "1234",
+                        dateCreated: new Date() + 3.seconds
+                    ] as JobEventLog,
+                    [
+                        status: """JobInfo ${[
+                            name: 'testChain:1234',
+                            chain: 'testChain',
+                            groupName: 'default',
+                            description: '',
+                            cron: '0 0 0 0 ? 2014',
                             fireTime: new Date(),
-                            scheduledFireTime: new Date()
-                        ] as JobHistory,
-                        jobLogs: [
-                            [
-                                line: "Line 1",
-                                logTime: new Date() + 1.seconds
-                            ] as JobLog,
-                            [
-                                line: "Line 2",
-                                logTime: new Date() + 2.seconds
-                            ] as JobLog,
-                            [
-                                line: "Line 3",
-                                logTime: new Date() + 3.seconds
-                            ] as JobLog,
-                            [
-                                line: "Line 4",
-                                logTime: new Date() + 4.seconds
-                            ] as JobLog                        
-                        ]
-                    ]
-                ].each { jh -> 
-                    jh.jobHistory.save()
-                    jh.jobLogs.each { jl ->
-                        jh.jobHistory.addToJobLogs(jl)
-                        jh.jobHistory.save()
-                    }
+                            scheduledFireTime: new Date() + 4.seconds
+                        ] as JSON}""",
+                        currentOperation: "SUMMARY",
+                        scheduledChain: "testChain",
+                        scheduledUniqueJobId: "1234",
+                        dateCreated: new Date()
+                    ] as JobEventLog                        
+                ].each { jl -> 
+                    jl.message = jl.status
+                    jl.source = "RuleChains"
+                    jl.save()
                 }
             }
             return [
-                jobHistories: JobHistory.list().collect { jh ->
-                    def jhObj = jh.properties as Map
-                    def endTime = JobLog.createCriteria().get {
-                        eq('jobHistory',jh)
-                        projections {
-                            max('logTime')
-                        }
-                    }
-                    def startTime = JobLog.createCriteria().get {
-                        eq('jobHistory',jh)
-                        projections {
-                            min('logTime')
-                        }
-                    }
-                    jhObj.duration = TimeCategory.minus(endTime, startTime).toString()
-                    return jhObj
-                }
+                jobHistories: JobEventLog.findAllByCurrentOperation('SUMMARY')
             ]            
         }
         controller.jobService = control.createMock()
@@ -556,17 +562,26 @@ class JobControllerTests {
         controller.request.method = "DELETE"
         def control = mockFor(JobService)
         control.demand.deleteJobHistory { name -> 
-            def jh = new JobHistory(name: "testChain:1234",
-                chain: "testChain",
-                groupName: "default",
-                description: "",
-                cron: "0 0 0 0 ? 2014",
-                fireTime: new Date(),
-                scheduledFireTime: new Date()
-            )
+            def (chain, suffix) = name.tokenize( ':' )
+            def jh = [
+                status: """JobInfo ${[
+                    name: 'testChain:1234',
+                    chain: 'testChain',
+                    groupName: 'default',
+                    description: '',
+                    cron: '0 0 0 0 ? 2014',
+                    fireTime: new Date(),
+                    scheduledFireTime: new Date() + 4.seconds
+                ] as JSON}""",
+                currentOperation: "SUMMARY",
+                scheduledChain: "testChain",
+                scheduledUniqueJobId: "1234",
+                dateCreated: new Date()
+            ] as JobEventLog
             jh.save()
-            def jobHistory = JobHistory.findByName(name.trim())
-            jobHistory.delete()
+            def recordsDeleted = JobEventLog.where { 
+                (scheduledChain == chain && scheduledUniqueJobId == suffix)
+            }.deleteAll()
             return [ success : "Job History deleted" ]
         }
         controller.jobService = control.createMock()
