@@ -18,26 +18,6 @@ import groovy.time.*
 @Mock([JobHistory,JobLog])
 class JobServiceTests {
     /**
-     * Tests adding a new Job History
-     * 
-     */
-    void testAddJobHistory() {
-        def jobService = new JobService()
-        def result = jobService.addJobHistory("testHistory")
-        assert result.jobHistory.name == "testHistory"
-    }
-    /**
-     * Tests finding a Job History by name
-     * 
-     */
-    void testFindJobHistory() {
-        def jobService = new JobService()
-        def h = new JobHistory(name: "testHistory")
-        h.save()
-        def result = jobService.findJobHistory("testHistory")
-        assert result.jobHistory.name == "testHistory"
-    }
-    /**
      * Tests retrieving a paginated list of job logs for a specified job history
      * 
      */
