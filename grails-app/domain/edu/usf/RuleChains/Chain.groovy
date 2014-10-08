@@ -134,6 +134,7 @@ class Chain {
     def execute(def input = [[:]],List<Link> orderedLinks = getOrderedLinks()) {
         println "I'm running"
         log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][START_EXECUTE] Chain ${jobInfo.chain}:${jobInfo.suffix}"
+        log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][SUMMARY] JobInfo ${jobInfo as JSON}"
         if(!!!orderedLinks) {
             orderedLinks = getOrderedLinks()
         }
@@ -157,7 +158,7 @@ class Chain {
                 log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][INFO] Modified rearranged input for link ${i} is ${Chain.rearrange(orderedLinks[i].input,orderedLinks[i].inputReorder) as JSON}"
                 switch(orderedLinks[i].rule) {
                 case { it instanceof SQLQuery }:
-                    log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][SQLQuery] Detected an SQLQuery for ${orderedLinks[i].rule.name}"
+                    log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][SQLQuery] Detected a SQLQuery for ${orderedLinks[i].rule.name}"
                     orderedLinks[i].output = linkService.justSQL(
                         { p ->
                             def gStringTemplateEngine = new GStringTemplateEngine()
@@ -593,7 +594,6 @@ class Chain {
                 }
             }
         }
-        log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][SUMMARY] JobInfo ${jobInfo as JSON}"
         log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][END_EXECUTE] Chain ${name}"
         return (orderedLinks.isEmpty())?[[:]]:orderedLinks.last().output
     }
