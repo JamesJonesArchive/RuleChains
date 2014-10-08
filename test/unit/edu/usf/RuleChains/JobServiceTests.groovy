@@ -2,6 +2,7 @@ package edu.usf.RuleChains
 
 
 
+import grails.converters.JSON
 import grails.test.mixin.*
 import org.junit.*
 import groovy.time.*
@@ -15,7 +16,7 @@ import groovy.time.*
  * See the API for {@link grails.test.mixin.services.ServiceUnitTestMixin} for usage instructions
  */
 @TestFor(JobService)
-@Mock([JobHistory,JobLog])
+@Mock([JobEventLog])
 class JobServiceTests {
     /**
      * Tests retrieving a paginated list of job logs for a specified job history
@@ -23,32 +24,51 @@ class JobServiceTests {
      */
     void testGetJobLogs() {
         def jobService = new JobService()
-        def h = new JobHistory(name: "testHistory")
-        h.save()
         use (TimeCategory) {
-            [
+            [                    
                 [
-                    line: "Line 1",
-                    logTime: new Date() + 1.seconds
-                ] as JobLog,
+                    status: "Detected a SQLQuery for mySQL1",
+                    currentOperation: "SQLQuery",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date() + 1.seconds
+                ] as JobEventLog,
                 [
-                    line: "Line 2",
-                    logTime: new Date() + 2.seconds
-                ] as JobLog,
+                    status: "Detected a SQLQuery for mySQL2",
+                    currentOperation: "SQLQuery",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date() + 2.seconds
+                ] as JobEventLog,
                 [
-                    line: "Line 3",
-                    logTime: new Date() + 3.seconds
-                ] as JobLog,
+                    status: "Detected a SQLQuery for mySQL3",
+                    currentOperation: "SQLQuery",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date() + 3.seconds
+                ] as JobEventLog,
                 [
-                    line: "Line 4",
-                    logTime: new Date() + 4.seconds
-                ] as JobLog                        
-            ].each { jl ->
-                h.addToJobLogs(jl)
-                h.save()
+                    status: """JobInfo ${[
+                        name: 'testChain:1234',
+                        chain: 'testChain',
+                        groupName: 'default',
+                        description: '',
+                        cron: '0 0 0 0 ? 2014',
+                        fireTime: new Date(),
+                        scheduledFireTime: new Date() + 4.seconds
+                    ] as JSON}""",
+                    currentOperation: "SUMMARY",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date() + 4.seconds
+                ] as JobEventLog                        
+            ].each { jl -> 
+                jl.message = jl.status
+                jl.source = "RuleChains"
+                jl.save()
             }
         }
-        def result = jobService.getJobLogs("testHistory",3,0)
+        def result = jobService.getJobLogs("testHistory:1234",3,0)
         assert result.jobLogs.size() == 3
     }
     /**
@@ -57,41 +77,52 @@ class JobServiceTests {
      */
     void testGetJobRuleTimings() {
         def jobService = new JobService()
-        def h = new JobHistory(name: "testHistory")
-        h.save()
         use (TimeCategory) {
-            [
+            [                    
                 [
-                    line: "[START_EXECUTE] Chain testChain",
-                    logTime: new Date() + 1.seconds
-                ] as JobLog,
+                    status: "Detected a SQLQuery for mySQL1",
+                    currentOperation: "SQLQuery",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date() + 1.seconds
+                ] as JobEventLog,
                 [
-                    line: "[SQLQuery] Detected a SQLQuery for rule1",
-                    logTime: new Date() + 1.seconds
-                ] as JobLog,
+                    status: "Detected a SQLQuery for mySQL2",
+                    currentOperation: "SQLQuery",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date() + 2.seconds
+                ] as JobEventLog,
                 [
-                    line: "[SQLQuery] Detected a SQLQuery for rule2",
-                    logTime: new Date() + 2.seconds
-                ] as JobLog,
+                    status: "Detected a SQLQuery for mySQL3",
+                    currentOperation: "SQLQuery",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date() + 3.seconds
+                ] as JobEventLog,
                 [
-                    line: "[SQLQuery] Detected a SQLQuery for rule3",
-                    logTime: new Date() + 3.seconds
-                ] as JobLog,
-                [
-                    line: "[END_EXECUTE] Chain testChain",
-                    logTime: new Date() + 3.seconds
-                ] as JobLog,
-                [
-                    line: "[Finished] testHistory",
-                    logTime: new Date() + 4.seconds
-                ] as JobLog                        
-            ].each { jl ->
-                h.addToJobLogs(jl)
-                h.save()
+                    status: """JobInfo ${[
+                        name: "testChain:1234",
+                        chain: "testChain",
+                        groupName: "default",
+                        description: "",
+                        cron: "0 0 0 0 ? 2014",
+                        fireTime: new Date(),
+                        scheduledFireTime: new Date() + 4.seconds
+                    ] as JSON}""",
+                    currentOperation: "SUMMARY",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date()
+                ] as JobEventLog                        
+            ].each { jl -> 
+                jl.message = jl.status
+                jl.source = "RuleChains"
+                jl.save()
             }
         }
-        def result = jobService.getJobRuleTimings("testHistory",3,0)
-        assert result.jobLogs.size() == 0
+        def result = jobService.getJobRuleTimings("testChain:1234",3,0)
+        assert result.jobLogs.size() == 3
     }
     /**
      * Tests returning a list of available Job Histories
@@ -99,8 +130,50 @@ class JobServiceTests {
      */
     void testGetJobHistories() {
         def jobService = new JobService()
-        def h = new JobHistory(name: "testHistory")
-        h.save()
+        use (TimeCategory) {
+            [                    
+                [
+                    status: "Detected a SQLQuery for mySQL1",
+                    currentOperation: "SQLQuery",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date() + 1.seconds
+                ] as JobEventLog,
+                [
+                    status: "Detected a SQLQuery for mySQL2",
+                    currentOperation: "SQLQuery",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date() + 2.seconds
+                ] as JobEventLog,
+                [
+                    status: "Detected a SQLQuery for mySQL3",
+                    currentOperation: "SQLQuery",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date() + 3.seconds
+                ] as JobEventLog,
+                [
+                    status: """JobInfo ${[
+                        name: "testChain:1234",
+                        chain: "testChain",
+                        groupName: "default",
+                        description: "",
+                        cron: "0 0 0 0 ? 2014",
+                        fireTime: new Date(),
+                        scheduledFireTime: new Date() + 4.seconds
+                    ] as JSON}""",
+                    currentOperation: "SUMMARY",
+                    scheduledChain: "testChain",
+                    scheduledUniqueJobId: "1234",
+                    dateCreated: new Date()
+                ] as JobEventLog                        
+            ].each { jl -> 
+                jl.message = jl.status
+                jl.source = "RuleChains"
+                jl.save()
+            }
+        }
         def result = jobService.getJobHistories()
         assert result.jobHistories.size() == 1
     }
@@ -110,9 +183,23 @@ class JobServiceTests {
      */
     void testDeleteJobHistory() {
         def jobService = new JobService()
-        def h = new JobHistory(name: "testHistory")
-        h.save()
-        def result = jobService.deleteJobHistory("testHistory")
-        assert result.success == "Job History deleted"
+        def jh = [
+            status: """JobInfo ${[
+                name: 'testChain:1234',
+                chain: 'testChain',
+                groupName: 'default',
+                description: '',
+                cron: '0 0 0 0 ? 2014',
+                fireTime: new Date(),
+                scheduledFireTime: new Date() + 4.seconds
+            ] as JSON}""",
+            currentOperation: "SUMMARY",
+            scheduledChain: "testChain",
+            scheduledUniqueJobId: "1234",
+            dateCreated: new Date()
+        ] as JobEventLog
+        jh.save()
+        def result = jobService.deleteJobHistory("testChain:1234")
+        assert result.success == "Job History deleted for testChain:1234 with 1 records deleted"
     }
 }
