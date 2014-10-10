@@ -44,7 +44,8 @@ class JobMeta {
                                     return t.getCronExpression() 
                                 },
                                 chain: jobDataMap.get("chain"),
-                                input: jobDataMap.get("input")
+                                input: jobDataMap.get("input"),
+                                emailLog: jobDataMap.get("emailLog")
                             ]
                         }.findAll {
                             it.triggers.size() > 0
@@ -61,7 +62,7 @@ class JobMeta {
          * @param      input               An optional array containing objects to be used as input on the chain execution
          * @return                         Returns an object with the schedule date
          */
-        JobService.metaClass.createChainJob = { String cronExpression,String name,def input = [[:]] ->
+        JobService.metaClass.createChainJob = { String cronExpression,String name,def input = [[:]], String email = "" ->
             def suffix = System.currentTimeMillis()
             name = { parts->
                 if(parts.size() > 1) {
@@ -84,6 +85,7 @@ class JobMeta {
                         .build();  
 
                         return [
+                            jobName: "${name}:${suffix}",
                             date: quartzScheduler.scheduleJob(trigger)                                
                         ]                        
                     } catch (ex) {
@@ -106,7 +108,8 @@ class JobMeta {
                                 name: jobKey.name,
                                 triggers: quartzScheduler.getTriggersOfJob(jobKey).collect { it.getCronExpression() },
                                 chain: dataMap.getString("chain"),
-                                input: dataMap.get("input")
+                                input: dataMap.get("input"),
+                                emailLog: dataMap.get("emailLog")
                             ] as JSON)
                             add().addFilepattern("${relativePath}").call()
                             if(!status().call().isClean()) {
@@ -123,7 +126,7 @@ class JobMeta {
                 }
             } else {
                 try {
-                    def jobDetail = ClosureJob.createJob(name:"${name}:${suffix}",durability:true,concurrent:false,jobData: [input: input,chain: name,gitAuthorInfo: delegate.userInfoHandlerService.getGitAuthorInfo()]){ jobCtx , appCtx->
+                    def jobDetail = ClosureJob.createJob(name:"${name}:${suffix}",durability:false,concurrent:false,jobData: [input: input,chain: name,gitAuthorInfo: delegate.userInfoHandlerService.getGitAuthorInfo(),emailLog: email]){ jobCtx , appCtx->
                         def chain = Chain.findByName(jobCtx.mergedJobDataMap.get('chain'))                        
                         if(!!chain) {
                             // Attaches a JobInfo map to the chain as a transient
@@ -144,12 +147,14 @@ class JobMeta {
                         } else {
                             delegate.log.info("[Chain:${name}:${suffix}][${name}][END_EXECUTE] Chain not found: ${name}")
                         }
+                        delegate.emailJobLog(jobCtx.mergedJobDataMap.get('emailLog'),"${name}:${suffix}")
                     }
                     try {
                         def trigger = newTrigger().withIdentity("${name}:${suffix}")
                         .withSchedule(cronSchedule(cronExpression))
                         .build()
                         return [
+                            jobName: "${name}:${suffix}",
                             date: quartzScheduler.scheduleJob(jobDetail, trigger)                                
                         ]
                     } catch (ex) {
@@ -164,6 +169,36 @@ class JobMeta {
                 }
             }
         }
+        JobService.metaClass.updateChainJobEmailLog { String name, String email ->            
+            def jobKey = quartzScheduler.getJobKeys(
+                groupEquals(quartzScheduler.getJobGroupNames().find { g -> return quartzScheduler.getJobKeys(groupEquals(g)).collect { it.name }.contains(name) })
+            ).find { jk -> return (jk.name == name) }
+            if(jobKey) {
+                def(chainName,suffix) = name.tokenize(':')
+                def newSuffix = System.currentTimeMillis()
+                def jobDataMap = quartzScheduler.getJobDetail(jobKey).getJobDataMap()
+                // Get a list of the old CRONs
+                def cronList = quartzScheduler.getTriggersOfJob(jobKey).collect { it.getCronExpression() }
+                // Schedule a new job with the same attributes
+                def createStatus = delegate.createChainJob(cronList.pop(),chainName,jobDataMap.get("input"),email)
+                if("jobName" in createStatus) {                    
+                    cronList.each { cron ->
+                        delegate.addscheduleChainJob(cron,createStatus.jobName)
+                    }
+                    // Remove the old job
+                    createStatus.removeResults = delegate.removeChainJob(name)
+                }
+                return createStatus
+            } else {
+                println "The job ${name} is not matching"
+                return [
+                    status: [
+                        jobName: name,
+                        removed: false
+                    ]
+                ]
+            }
+        }
         /**
          * Renames an existing Quartz RuleChain job
          * 
@@ -172,59 +207,34 @@ class JobMeta {
          * @return              Returns an object with the schedule date or error response
          */
         JobService.metaClass.updateChainJob { String name,String newName ->
-            def suffix = System.currentTimeMillis()
-            name = { parts->
-                if(parts.size() > 1) {
-                    suffix = parts[1]
-                    return parts[0]
-                }
-                return name
-            }.call(name.split(":"))
-            if((quartzScheduler.getJobGroupNames().findAll { g -> return quartzScheduler.getJobKeys(groupEquals(g)).collect { jk ->
-                            jk.name 
-                        }.contains(name) }.size() > 0)) {
-                def jobKey = quartzScheduler.getJobKeys(
-                    groupEquals(quartzScheduler.getJobGroupNames().find { g -> return quartzScheduler.getJobKeys(groupEquals(g)).collect { it.name }.contains(name) })
-                ).find { jk -> return (jk.name == name) }
+            def jobKey = quartzScheduler.getJobKeys(
+                groupEquals(quartzScheduler.getJobGroupNames().find { g -> return quartzScheduler.getJobKeys(groupEquals(g)).collect { it.name }.contains(name) })
+            ).find { jk -> return (jk.name == name) }
+            if(jobKey) {
+                def(chainName,suffix) = name.tokenize(':')
+                def newSuffix = System.currentTimeMillis()
                 def jobDataMap = quartzScheduler.getJobDetail(jobKey).getJobDataMap()
-                def jobDetail = ClosureJob.createJob(name:"${newName}:${suffix}",durability:true,concurrent:false,jobData: [input: jobDataMap.get("input"),chain: newName,gitAuthorInfo: delegate.userInfoHandlerService.getGitAuthorInfo()]){ jobCtx , appCtx->
-                    def chain = Chain.findByName(jobCtx.mergedJobDataMap.get('chain'))
-                    if(!!chain) {
-                        // Attaches a JobInfo map to the chain as a transient
-                        chain.jobInfo = [
-                            chain:newName,
-                            suffix:suffix,
-                            description: ((!!!!jobCtx.getJobDetail().getDescription())?jobCtx.getJobDetail().getDescription():""),
-                            groupName: jobCtx.getJobDetail().getKey().getGroup(),
-                            cron: { t ->
-                                return t.metaClass.respondsTo(t, 'getCronExpression')?t.getCronExpression():""
-                            }.call(jobCtx.getTrigger()),
-                            fireTime: jobCtx.getFireTime(),
-                            scheduledFireTime: jobCtx.getScheduledFireTime()   
-                        ]
-                        def result = chain.execute(jobCtx.mergedJobDataMap.get('input'))
-                        delegate.log.info("[Chain:${newName}:${suffix}][${newName}][RESULT] ${result as JSON}")
-                        delegate.log.info("[Chain:${newName}:${suffix}][${newName}][END_EXECUTE] Chain ${newName}:${suffix}")
-                    } else {
-                        delegate.log.info("[Chain:${newName}:${suffix}][${newName}][END_EXECUTE] Chain not found: ${newName}")
+                // Get a list of the old CRONs
+                def cronList = quartzScheduler.getTriggersOfJob(jobKey).collect { it.getCronExpression() }
+                // Schedule a new job with the same attributes
+                def createStatus = delegate.createChainJob(cronList.pop(),newName,jobDataMap.get("input"),jobDataMap.get("emailLog"))
+                if("jobName" in createStatus) {                    
+                    cronList.each { cron ->
+                        delegate.addscheduleChainJob(cron,createStatus.jobName)
                     }
+                    // Remove the old job
+                    createStatus.removeResults = delegate.removeChainJob(name)
                 }
-                quartzScheduler.scheduleJobs([
-                        (jobDetail):  quartzScheduler.getTriggersOfJob(jobKey).collect { t ->
-                            return newTrigger()
-                            .withIdentity("${name}:${suffix}")
-                            .withSchedule(cronSchedule(t.getCronExpression()))
-                            .forJob(jobDetail.getKey())
-                            .build()
-                        }
-                    ],true)
+                return createStatus
+            } else {
+                println "The job ${name} is not matching"
                 return [
-                    updated: quartzScheduler.deleteJob(jobKey)
+                    status: [
+                        jobName: name,
+                        removed: false
+                    ]
                 ]
-            }
-            return [
-                updated: false
-            ]
+            }            
         }
         /**
          * Removes an existing Quartz RuleChain job
@@ -320,7 +330,8 @@ class JobMeta {
                                 name: jk.name,
                                 triggers: quartzScheduler.getTriggersOfJob(jk).collect { it.getCronExpression() },
                                 chain: dataMap.getString("chain"),
-                                input: dataMap.get("input")
+                                input: dataMap.get("input"),
+                                emailLog: dataMap.get("emailLog")
                             ] as JSON)
                             add().addFilepattern("${relativePath}").call()
                             if(!status().call().isClean()) {
@@ -411,7 +422,8 @@ class JobMeta {
                             name: jk.name,
                             triggers: quartzScheduler.getTriggersOfJob(jk).collect { it.getCronExpression() },
                             chain: dataMap.getString("chain"),
-                            input: dataMap.get("input")
+                            input: dataMap.get("input"),
+                            emailLog: dataMap.get("emailLog")
                         ] as JSON)
                         add().addFilepattern("${relativePath}").call()
                         if(!status().call().isClean()) {
@@ -476,7 +488,8 @@ class JobMeta {
                             name: jobKey.name,
                             triggers: quartzScheduler.getTriggersOfJob(jobKey).collect { it.getCronExpression() },
                             chain: dataMap.getString("chain"),
-                            input: dataMap.get("input")
+                            input: dataMap.get("input"),
+                            emailLog: dataMap.get("emailLog")
                         ] as JSON)
                         add().addFilepattern("${relativePath}").call()
                         if(!status().call().isClean()) {
@@ -553,7 +566,8 @@ class JobMeta {
                         name: jobKey.name,
                         triggers: quartzScheduler.getTriggersOfJob(jobKey).collect { it.getCronExpression() },
                         chain: dataMap.getString("chain"),
-                        input: dataMap.get("input")
+                        input: dataMap.get("input"),
+                        emailLog: dataMap.get("emailLog")
                     ] as JSON)
                     add().addFilepattern("${relativePath}").call()
                     if(!status().call().isClean()) {
@@ -585,7 +599,8 @@ class JobMeta {
                         }.call(jec.getTrigger()),
                         fireTime: jec.getFireTime(),
                         scheduledFireTime: jec.getScheduledFireTime(),
-                        input: jec.getJobDetail().getJobDataMap().get("input")
+                        input: jec.getJobDetail().getJobDataMap().get("input"),
+                        emailLog: jec.getJobDetail().getJobDataMap().get("emailLog")
                     ]
                 }
             ]
