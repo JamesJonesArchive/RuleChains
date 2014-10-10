@@ -584,7 +584,8 @@
                         { "bVisible": true,"mDataProp": "group","sDefaultContent":"" },
                         { "bVisible": true,"mDataProp": "cron","sDefaultContent":"" },
                         { "bVisible": true,"mDataProp": "fireTime","sDefaultContent":"" },
-                        { "bVisible": true,"mDataProp": "scheduledFireTime","sDefaultContent":"" }
+                        { "bVisible": true,"mDataProp": "scheduledFireTime","sDefaultContent":"" },
+                        { "bVisible": true,"mDataProp": "emailLog","sDefaultContent":"" }
                     ],
                     "bJQueryUI": true,
                     "asStripeClasses": [ 'ui-priority-primary', 'ui-priority-secondary' ],
@@ -1281,7 +1282,10 @@
                                         );
                                     })
                                 )
-                            ).hide()
+                            ).hide(),
+                            emailLog: $('<input />',{
+                                id: "emailLog"
+                            })
                         })
                         .addClass('ui-state-default ui-widget-content')
                         .append(
@@ -1331,6 +1335,21 @@
                                             $('<td />')
                                             .append(
                                                 $('<label />',{
+                                                    "for": "emailLog"
+                                                })
+                                                .html('Email Log Address:')
+                                            )
+                                        )
+                                        .append(
+                                            $('<td />').append($(this).data().emailLog.css({"float":"right"}))                                        
+                                        )
+                                    )
+                                    .append(
+                                        $('<tr />')
+                                        .append(
+                                            $('<td />')
+                                            .append(
+                                                $('<label />',{
                                                     "for": "cronExpression"
                                                 })
                                                 .html('Cron Expression:')
@@ -1366,7 +1385,8 @@
                                     var dialog = $(this),
                                         json = {
                                             name: dialog.data().chainSelect.find('option:selected').text(),
-                                            cronExpression: $.trim(dialog.data().cronExpression.val())
+                                            cronExpression: $.trim(dialog.data().cronExpression.val()),
+                                            emailLog: $.trim(dialog.data().emailLog.val())
                                         };
                                     if(json.cronExpression.length > 1) {
                                         $.ruleChains.job.PUTcreateChainJob(json,function(response) {
@@ -1582,15 +1602,7 @@
                                 ).remove().html();
                             }
                         },
-                        { "bVisible": true,"mDataProp": null,"sDefaultContent":"","fnRender": 
-                            function(oObj) {
-                                var div = $('<div />'),
-                                    jobCodeButton = $('<button />',{
-                                        "id": "jobCodeButton"
-                                    }).html("Extract Job Entry Code").appendTo(div);
-                                return div.html();
-                            }                             
-                        }
+                        { "bVisible": true,"mDataProp": "emailLog","sDefaultContent":""}
                     ],
                     "bJQueryUI": true,
                     "asStripeClasses": [ 'ui-priority-primary', 'ui-priority-secondary' ],
@@ -1616,7 +1628,7 @@
                         })
                         .find('button#details',nRow).click(function(event) { event.stopPropagation(); }).end()
                         .find('select#chain',nRow).click(function(event) { event.stopPropagation(); }).end()
-                        .find('button#jobCodeButton',nRow).click(function(event) { event.stopPropagation(); }).end()
+                        .find('td:eq(3)',nRow).click(function(event) { event.stopPropagation(); }).end()
                         .find('select#trigger',nRow).click(function(event) { event.stopPropagation(); }).end()
                         .find('button#triggerAdd',nRow).click(function(event) { event.stopPropagation(); }).end()
                         .find('button#triggerDelete',nRow).click(function(event) { event.stopPropagation(); }).end()
@@ -1724,11 +1736,11 @@
                                                 name: aData.name,
                                                 newName: chainName
                                             },function(response) {
-                                                if("updated" in response) {
+                                                if("jobName" in response) {
                                                     self.scheduledJobsRefreshButton.trigger('click');
-                                                    // alert("Select value was updated");
                                                 } else {
-                                                    alert(response.error);
+                                                    alert("Unknown Error");
+                                                    self.scheduledJobsRefreshButton.trigger('click');
                                                 }                                                                                                                
                                             }
                                         );
@@ -1955,15 +1967,30 @@
                                     });
                                 }),
                                 triggerButtonSet = $(nRowData.triggerButtonSet = $('span#triggerButtonSet',nRow)).buttonset(),
-                                jobCodeButton = $(nRowData.jobCodeButton = $("button#jobCodeButton",nRow)).button({
-                                    text: false,
-                                    icons: {
-                                        primary: 'ui-icon-script'
-                                    }
-                                }).click(function() {
-                                    alert('Not implemented yet!');
+                                emailEditable = $(nRowData.emailEditable = $("td:eq(3)",nRow)).editable(function(value, settings) { 
+                                    var result = value,
+                                    origValue = this.revert;
+                                    $.ruleChains.job.POSTupdateChainJobEmailLog({
+                                        name: aData.name,
+                                        emailLog: $.trim(result)
+                                    },function(status) {
+                                        if("jobName" in status) {
+                                            self.scheduledJobsRefreshButton.trigger('click');
+                                        } else {
+                                            alert("Unknown Error!");
+                                            self.scheduledJobsRefreshButton.trigger('click');
+                                        }                                    
+                                    });
+//                                    console.log(this);
+//                                    console.log(value);
+//                                    console.log(settings);
+                                    return(value);
+                                 }, { 
+                                    type    : 'text-ui',
+                                    submit  : 'Update',
+                                    event     : "dblclick",
+                                    tooltip   : 'Doubleclick to edit...'
                                 });
-                                
                         });
                     }
                 
