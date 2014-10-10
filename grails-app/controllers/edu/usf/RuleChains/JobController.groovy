@@ -48,6 +48,24 @@ class JobController {
         }   
     }
     /**
+     * Updates an existing schedule for a rule chain in quartz with an email address for sending out a log
+     * 
+     * @return           Returns the status of quartz after job is created
+     */
+    def updateChainJobEmailLog() {
+        withFormat {
+            html {
+                return jobService.updateChainJobEmailLog(params.name,params.emailLog)
+            }
+            xml {
+                render jobService.updateChainJobEmailLog(params.name,params.emailLog) as XML
+            }
+            json {
+                JSON.use("deep") { render jobService.updateChainJobEmailLog(params.name,params.emailLog) as JSON }
+            }
+        }   
+    }
+    /**
      * Removes a quartz schedule for a rule chain and deletes the job
      * 
      * @return           Returns the status of quartz after job is removed
