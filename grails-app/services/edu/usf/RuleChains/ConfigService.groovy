@@ -137,7 +137,7 @@ class ConfigService {
                 def badJob = false
                 job.triggers.eachWithIndex { t,i->
                     if(i < 1) {
-                        if("error" in jobService.createChainJob(t,job.name,(job.input)?job.input:[[:]])) {
+                        if("error" in jobService.createChainJob(t,job.name,(job.input)?job.input:[[:]],(job.emailLog)?job.emailLog:"")) {
                             // delete the bad schedule
                             badJob = true
                         }
