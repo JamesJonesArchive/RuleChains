@@ -37,13 +37,13 @@ class JobController {
     def createChainJob() {
         withFormat {
             html {
-                return jobService.createChainJob(params.cronExpression,params.name,params.input)
+                return jobService.createChainJob(params.cronExpression,params.name,params.input,params.emailLog)
             }
             xml {
-                render jobService.createChainJob(params.cronExpression,params.name,params.input) as XML
+                render jobService.createChainJob(params.cronExpression,params.name,params.input,params.emailLog) as XML
             }
             json {
-                JSON.use("deep") { render jobService.createChainJob(params.cronExpression,params.name,params.input) as JSON }
+                JSON.use("deep") { render jobService.createChainJob(params.cronExpression,params.name,params.input,params.emailLog) as JSON }
             }
         }   
     }
