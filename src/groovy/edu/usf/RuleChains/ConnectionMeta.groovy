@@ -78,7 +78,7 @@ class ConnectionMeta {
              * @return           Returns an Map containing global,local and provided key/value pairs
              */
             serviceClass.metaClass.getMergedGlobals { map=[:] ->
-                return [ rcGlobals: (grailsApplication.config.rcGlobals)?grailsApplication.config.rcGlobals:[:] ] + map
+                return [ rcGlobals: (grailsApplication.config.ruleChains.globals)?grailsApplication.config.ruleChains.globals:[:] ] + map
             }
         }
         /**
@@ -90,7 +90,7 @@ class ConnectionMeta {
          * @return           Returns an Map containing global,local and provided key/value pairs
          */
         Chain.metaClass.getMergedGlobals { map=[:] ->      
-            return [ rcGlobals: (grailsApplication.config.rcGlobals)?grailsApplication.config.rcGlobals:[:] ] + map + [ rcLocals: [chain: delegate.name] ]
+            return [ rcGlobals: (grailsApplication.config.ruleChains.globals)?grailsApplication.config.ruleChains.globals:[:] ] + map + [ rcLocals: [chain: delegate.name] ]
         }
         /**
          * Returns the config string of imports available in Groovy Rule scripts
@@ -98,7 +98,7 @@ class ConnectionMeta {
          * @return   A string block of import statements
          */
         LinkService.metaClass.getGroovyRuleImports {->
-            def imports = grailsApplication.config?.rcImports
+            def imports = grailsApplication.config?.ruleChains.imports
             return (imports)?imports:""
         }
         /**

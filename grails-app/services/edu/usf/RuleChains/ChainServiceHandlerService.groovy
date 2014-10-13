@@ -87,7 +87,7 @@ class ChainServiceHandlerService {
                 ${rearrange}
             """        
             try {
-                return new GroovyShell(new Binding("rows":rows,rcGlobals: (Holders.config.rcGlobals)?Holders.config.rcGlobals:[:])).evaluate(toBeEvaluated)
+                return new GroovyShell(new Binding("rows":rows,rcGlobals: (Holders.config.ruleChains.globals)?Holders.config.ruleChains.globals:[:])).evaluate(toBeEvaluated)
             } catch(Exception e) {
                 System.out.println("${rows.toString()} error: ${e.message} on closure: ${toBeEvaluated}")
             }

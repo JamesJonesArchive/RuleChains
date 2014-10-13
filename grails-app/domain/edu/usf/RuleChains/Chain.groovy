@@ -615,7 +615,7 @@ class Chain {
                 ${rearrange}
             """        
             try {
-                return new GroovyShell(new Binding("row":row,rcGlobals: (Holders.config.rcGlobals)?Holders.config.rcGlobals:[:])).evaluate(toBeEvaluated)
+                return new GroovyShell(new Binding("row":row,rcGlobals: (Holders.config.ruleChains.globals)?Holders.config.ruleChains.globals:[:])).evaluate(toBeEvaluated)
             } catch(Exception e) {
                 System.out.println("${row.toString()} error: ${e.message} on closure: ${toBeEvaluated}")
             }
