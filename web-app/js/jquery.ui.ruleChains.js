@@ -1481,7 +1481,10 @@
                                         name: aData.name,
                                         mergeName: dialog.data().jobSelect.val()
                                     },function(status) {
-                                        if("delete" in status) {
+                                        if("status" in status) {
+                                            if(!status.status) {
+                                                alert("Error: Merge job could not be removed!");
+                                            }
                                             self.scheduleDataTable.fnClearTable();
                                             self.scheduledJobsRefreshButton.trigger('click');
                                             dialog.dialog('close');
@@ -1551,6 +1554,9 @@
                                         name: aData.name
                                     },function(status) {
                                         if("status" in status) {
+                                            if(!status.status) {
+                                                alert("Error: Job could not be removed!");
+                                            }
                                             self.scheduleDataTable.fnClearTable();
                                             self.scheduledJobsRefreshButton.trigger('click');
                                             dialog.dialog('close');
@@ -1875,6 +1881,9 @@
                                                     cronExpression: nRowData.triggerSelect.val()                                                    
                                                 },function(status) {
                                                     if("status" in status) {
+                                                        if(!status.status) {
+                                                            alert("Error: Schedule could not be removed from Job!");
+                                                        }
                                                         self.scheduledJobsRefreshButton.trigger('click');
                                                         dialog.dialog('close');
                                                         dialog.dialog('destroy');
@@ -1947,6 +1956,9 @@
                                                     cron: $(this).data().cron.val()
                                                 },function(status) {
                                                     if("status" in status) {
+                                                        if(!status.status) {
+                                                            alert("Error: Old schedule could not be removed from Job!");
+                                                        }
                                                         self.scheduledJobsRefreshButton.trigger('click');
                                                         dialog.dialog('close');
                                                         dialog.dialog('destroy');

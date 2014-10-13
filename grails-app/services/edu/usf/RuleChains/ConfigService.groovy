@@ -142,7 +142,7 @@ class ConfigService {
                             badJob = true
                         }
                     } else {
-                        jobService.addscheduleChainJob(t,job.name)
+                        jobService.addScheduleChainJob(t,job.name)
                     }
                 }
                 if(badJob) {
