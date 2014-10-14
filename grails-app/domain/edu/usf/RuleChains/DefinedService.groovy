@@ -24,19 +24,16 @@ class DefinedService extends Rule {
     Map headers = [:]
     static constraints = {
         method( 
-            blank: false,
             validator: { val, obj -> 
                 return val.name() in MethodEnum.values().collect { it.name() }                
             }        
         )
         authType( 
-            blank: false,
             validator: { val, obj -> 
                 return val.name() in AuthTypeEnum.values().collect { it.name() }                
             }        
         )
         parse( 
-            blank: false,
             validator: { val, obj -> 
                 return val.name() in ParseEnum.values().collect { it.name() }                
             }        

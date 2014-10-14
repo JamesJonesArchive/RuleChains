@@ -658,7 +658,8 @@ class GitMeta {
                         name: jobKey.name,
                         triggers: triggers,
                         chain: dataMap.getString("chain"),
-                        input: dataMap.get("input")
+                        input: dataMap.get("input"),
+                        emailLog: dataMap.get("emailLog")
                     ] as JSON)
                 add().addFilepattern("${relativePath}").call()
                 if(!status().call().isClean()) {
@@ -749,7 +750,8 @@ class GitMeta {
                         name: jobKey.name,
                         triggers: context.getScheduler().getTriggersOfJob(jobKey).collect { it.getCronExpression() },
                         chain: dataMap.getString("chain"),
-                        input: dataMap.get("input")
+                        input: dataMap.get("input"),
+                        emailLog: dataMap.get("emailLog")
                     ] as JSON)
                 add().addFilepattern("${relativePath}").call()
                 if(!status().call().isClean()) {
