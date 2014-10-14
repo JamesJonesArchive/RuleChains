@@ -13,11 +13,11 @@ import grails.util.GrailsUtil
  */ 
 abstract class Rule {
     String name
-    JobHistory jobHistory
+    def jobInfo
     boolean isSynced = true
     
     static belongsTo = [ruleSet: RuleSet]
-    static transients = ['jobHistory','isSynced']
+    static transients = ['jobInfo','isSynced']
     static constraints = {
         name(   
                 blank: false,

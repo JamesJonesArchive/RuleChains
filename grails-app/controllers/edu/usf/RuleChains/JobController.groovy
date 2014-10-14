@@ -37,13 +37,31 @@ class JobController {
     def createChainJob() {
         withFormat {
             html {
-                return jobService.createChainJob(params.cronExpression,params.name,params.input)
+                return jobService.createChainJob(params.cronExpression,params.name,params.input,params.emailLog)
             }
             xml {
-                render jobService.createChainJob(params.cronExpression,params.name,params.input) as XML
+                render jobService.createChainJob(params.cronExpression,params.name,params.input,params.emailLog) as XML
             }
             json {
-                JSON.use("deep") { render jobService.createChainJob(params.cronExpression,params.name,params.input) as JSON }
+                JSON.use("deep") { render jobService.createChainJob(params.cronExpression,params.name,params.input,params.emailLog) as JSON }
+            }
+        }   
+    }
+    /**
+     * Updates an existing schedule for a rule chain in quartz with an email address for sending out a log
+     * 
+     * @return           Returns the status of quartz after job is created
+     */
+    def updateChainJobEmailLog() {
+        withFormat {
+            html {
+                return jobService.updateChainJobEmailLog(params.name,params.emailLog)
+            }
+            xml {
+                render jobService.updateChainJobEmailLog(params.name,params.emailLog) as XML
+            }
+            json {
+                JSON.use("deep") { render jobService.updateChainJobEmailLog(params.name,params.emailLog) as JSON }
             }
         }   
     }
@@ -124,16 +142,16 @@ class JobController {
      * 
      * @return           Returns the status of quartz after job is updated
      */
-    def addscheduleChainJob() {
+    def addScheduleChainJob() {
         withFormat {
             html {
-                return jobService.addscheduleChainJob(params.cronExpression,params.name)
+                return jobService.addScheduleChainJob(params.cronExpression,params.name)
             }
             xml {
-                render jobService.addscheduleChainJob(params.cronExpression,params.name) as XML
+                render jobService.addScheduleChainJob(params.cronExpression,params.name) as XML
             }
             json {
-                JSON.use("deep") { render jobService.addscheduleChainJob(params.cronExpression,params.name) as JSON }
+                JSON.use("deep") { render jobService.addScheduleChainJob(params.cronExpression,params.name) as JSON }
             }
         }   
     }
@@ -142,16 +160,16 @@ class JobController {
      * 
      * @return           Returns the status of quartz after job is updated
      */
-    def mergescheduleChainJob() {
+    def mergeScheduleChainJob() {
         withFormat {
             html {
-                return jobService.mergescheduleChainJob(params.mergeName,params.name)
+                return jobService.mergeScheduleChainJob(params.mergeName,params.name)
             }
             xml {
-                render jobService.mergescheduleChainJob(params.mergeName,params.name) as XML
+                render jobService.mergeScheduleChainJob(params.mergeName,params.name) as XML
             }
             json {
-                JSON.use("deep") { render jobService.mergescheduleChainJob(params.mergeName,params.name) as JSON }
+                JSON.use("deep") { render jobService.mergeScheduleChainJob(params.mergeName,params.name) as JSON }
             }
         }   
     }

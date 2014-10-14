@@ -36,6 +36,7 @@
                                     <th>CRON</th>
                                     <th>FireTime</th>
                                     <th>ScheduledFireTime</th>
+                                    <th>EmailLog</th>
                                 </tr>
                             </thead>
                         </table>
@@ -101,7 +102,7 @@
                             <th>Job</th>
                             <th>Chain</th>
                             <th>Triggers</th>
-                            <th>Job&nbsp;Code</th>
+                            <th>Email&nbsp;Log</th>
                         </tr>
                     </thead>
                 </table>

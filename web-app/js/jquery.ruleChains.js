@@ -335,7 +335,8 @@
                     },
                     data: JSON.stringify({ 
                         cronExpression: json.cronExpression,
-                        input: ("input" in json)?json.input:[]
+                        input: ("input" in json)?json.input:[],
+                        emailLog: ("emailLog" in json)?json.emailLog:""
                     }),
                     success: callback,
                     error: function (jqXHR,  textStatus, errorThrown) {
@@ -363,6 +364,33 @@
                     },
                     data: JSON.stringify({
                         newName: json.newName
+                    }),
+                    success: callback,
+                    error: function (jqXHR,  textStatus, errorThrown) {
+                        if (jqXHR.status === 0) {
+                            // Session has probably expired and needs to reload and let CAS take care of the rest
+                            alert('Your session has expired, the page will need to reload and you may be asked to log back in');
+                            // reload entire page - this leads to login page
+                            window.location.reload();
+                        }
+                    }
+                });                                                
+            },
+            POSTupdateChainJobEmailLog: function(json,callback) {
+                json = jQuery.extend(true,{
+                    name: "",
+                    emailLog: ""
+                },json);
+                $.ajax({
+                    url: '/RuleChains/job/email/'+json.name,
+                    type: "POST",
+                    dataType : "json",
+                    beforeSend: function (XMLHttpRequest, settings) {
+                        XMLHttpRequest.setRequestHeader("Content-Type", "application/json");
+                        XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                    },
+                    data: JSON.stringify({
+                        emailLog: json.emailLog
                     }),
                     success: callback,
                     error: function (jqXHR,  textStatus, errorThrown) {

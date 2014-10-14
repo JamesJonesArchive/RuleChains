@@ -43,35 +43,18 @@ class ChainServiceHandlerService {
         if(!!chainServiceHandler) {
             if(chainServiceHandler.method in [ MethodEnum.byName(method) ]) {
                 def suffix = System.currentTimeMillis()
-                // Attaches a JobHistory to the Chain as a transient
-                chainServiceHandler.chain.jobHistory = { jh -> 
-                    if('error' in jh) {
-                        log.info "Creating a new job history"
-                        jh = jobService.addJobHistory("${name}:${suffix}:chainServiceHandler")
-                        return ('error' in jh)?null:jh.jobHistory
-                    }
-                    return jh.jobHistory
-                }.call(jobService.findJobHistory("${name}:${suffix}:chainServiceHandler"))    
-                if(!!chainServiceHandler.chain.jobHistory) {
-                    chainServiceHandler.chain.jobHistory.properties = [
-                        chain: chainServiceHandler.chain.name,
-                        description: "ChainServiceHandler ${name} for ${chainServiceHandler.chain.name}",
-                        groupName: "none",
-                        cron: "rest triggered",
-                        fireTime: new Date(suffix),
-                        scheduledFireTime: new Date(suffix)
-                    ]       
-                    if(!chainServiceHandler.chain.jobHistory.save(failOnError:false, flush: true, insert: false, validate: true)) {
-                        log.error "'${chainServiceHandler.chain.jobHistory.errors.fieldError.field}' value '${chainServiceHandler.chain.jobHistory.errors.fieldError.rejectedValue}' rejected" 
-                        return [ error: "ChainServiceHander aborted due to jobHistory error: '${chainServiceHandler.chain.jobHistory.errors.fieldError.field}' value '${chainServiceHandler.chain.jobHistory.errors.fieldError.rejectedValue}' rejected" ]
-                    } else {
-                        def rows = [ Chain.rearrange(input,chainServiceHandler.inputReorder) ]
-                        return rearrange(chainServiceHandler.chain.execute(rows,chainServiceHandler.chain.getOrderedLinks()),chainServiceHandler.outputReorder)
-                    }                    
-                } else {
-                    log.error "Job History is NULL and won't be used to log execution"
-                    return [ error: "JobHistory cannot be null in executing a ChainServiceHandler"]                    
-                }
+                // Attaches a JobInfo to the Chain as a transient
+                chainServiceHandler.chain.jobInfo = [
+                    chain: chainServiceHandler.chain.name,
+                    suffix:suffix,
+                    description: "ChainServiceHandler ${name} for ${chainServiceHandler.chain.name}",
+                    groupName: "none",
+                    cron: "rest triggered",
+                    fireTime: new Date(suffix),
+                    scheduledFireTime: new Date(suffix)                    
+                ]
+                def rows = [ Chain.rearrange(input,chainServiceHandler.inputReorder) ]
+                return rearrange(chainServiceHandler.chain.execute(rows,chainServiceHandler.chain.getOrderedLinks()),chainServiceHandler.outputReorder)
             } else {
                 return [ error: "Method '${chainServiceHandler.method.name()}' for handler '${name}' not defined" ]
             }
@@ -104,7 +87,7 @@ class ChainServiceHandlerService {
                 ${rearrange}
             """        
             try {
-                return new GroovyShell(new Binding("rows":rows,rcGlobals: (Holders.config.rcGlobals)?Holders.config.rcGlobals:[:])).evaluate(toBeEvaluated)
+                return new GroovyShell(new Binding("rows":rows,rcGlobals: (Holders.config.ruleChains.globals)?Holders.config.ruleChains.globals:[:])).evaluate(toBeEvaluated)
             } catch(Exception e) {
                 System.out.println("${rows.toString()} error: ${e.message} on closure: ${toBeEvaluated}")
             }

@@ -13,13 +13,18 @@ import org.grails.plugins.csv.CSVWriter
 class GroovyRuleEnvironmentService {
     static transactional = true
     /**
-     * Implements Chance Gray's EmailerEngine sendEmail method
+     * Implements Chance Gray's EmailerEngine sendEmail method with a bind hashmap
      * 
      * @param  config     A formated config object as defined by the EmailerEngine class method
      * @param  emailText  Text of the email
+     * @param  bindMap    Optional hashmap to bind values to the email text via the GStringTemplateEngine
      */
-    def sendEmail(ConfigObject config, String emailText) {
-        (new EmailerEngine()).sendEmail(config,emailText)
+    def sendEmail(ConfigObject config, String emailText,Map bindMap = [:]) { 
+        if(bindMap) {
+            (new EmailerEngine()).sendEmail(config,(new GStringTemplateEngine()).createTemplate(emailText).make(bindMap).toString())
+        } else {
+            (new EmailerEngine()).sendEmail(config,emailText)
+        }
     }
     /**
      * Implements Camel JCIFS to create a RouteBuilder and pass it to a closure

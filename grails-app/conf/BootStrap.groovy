@@ -14,6 +14,7 @@ import edu.usf.RuleChains.ConnectionMeta
 import edu.usf.RuleChains.JobMeta
 import edu.usf.RuleChains.GitMeta
 import edu.usf.RuleChains.Groovy
+import edu.usf.RuleChains.JobEventLogAppender
 import org.quartz.JobListener
 import org.quartz.listeners.SchedulerListenerSupport
 
@@ -28,6 +29,7 @@ class BootStrap {
     def jobMeta = new JobMeta()
     def gitMeta = new GitMeta()
     def init = { servletContext ->
+        // Allow the event log appender to start now that the database stuff is up and running
         if(!!!quartzScheduler) {
             print "Didn't get set!"
         } else {
@@ -40,6 +42,7 @@ class BootStrap {
             quartzScheduler.getListenerManager().addSchedulerListener(new RuleChainsSchedulerListener())
             print jobService.listChainJobs()
             configService.syncronizeDatabaseFromGit()
+            JobEventLogAppender.appInitialized = true
         }
         switch(GrailsUtil.environment){
             case "development":

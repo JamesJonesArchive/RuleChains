@@ -29,13 +29,16 @@ class UrlMappings {
                     action = [GET:"getSources", PUT:"error", DELETE:"error", POST:"error"] 
                 } 
                 "/job"(controller:"job",parseRequest: true){ 
-                    action = [GET:"listChainJobs", PUT:"error", DELETE:"error", POST:"mergescheduleChainJob"] 
+                    action = [GET:"listChainJobs", PUT:"error", DELETE:"error", POST:"mergeScheduleChainJob"] 
                 }
                 "/job/$name"(controller:"job",parseRequest: true){ 
                     action = [GET:"error", PUT:"createChainJob", DELETE:"removeChainJob", POST:"updateChainJob"] 
                 }
+                "/job/email/$name"(controller:"job",parseRequest: true){ 
+                    action = [GET:"error", PUT:"error", DELETE:"error", POST:"updateChainJobEmailLog"] 
+                }
                 "/job/$name/$cronExpression"(controller:"job",parseRequest: true){ 
-                    action = [GET:"error", PUT:"addscheduleChainJob", DELETE:"unscheduleChainJob", POST:"rescheduleChainJob"] 
+                    action = [GET:"error", PUT:"addScheduleChainJob", DELETE:"unscheduleChainJob", POST:"rescheduleChainJob"] 
                 }
                 "/history"(controller:"job",parseRequest: true){ 
                     action = [GET:"getJobHistories", PUT:"error", DELETE:"error", POST:"error"] 
