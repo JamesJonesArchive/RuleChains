@@ -69,7 +69,7 @@ grails.project.dependency.resolution = {
         compile ':grails-cas-rest-client:0.3.1'
         compile ":quartz2:2.1.6.2"
         compile ":rest:0.7"
-        compile ":jgit:1.0.0a"
+        compile ":jgit:1.0.1"
         compile ":csv:0.3.1"
         runtime ":cors:1.1.6"
     }
