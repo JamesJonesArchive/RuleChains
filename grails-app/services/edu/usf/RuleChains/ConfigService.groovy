@@ -73,9 +73,10 @@ class ConfigService {
                     def rs = []
                     ruleSetFolder.eachFile(FileType.FILES) { ruleFile ->
                         def rule = JSON.parse(ruleFile.text)
+                        rule.name = ruleFile.name[0..<ruleFile.name.lastIndexOf(".json")]
                         rs << rule                    
-                        ruleSetService.addRule(ruleSetFolder.name,ruleFile.name[0..<ruleFile.name.lastIndexOf(".json")],rule["class"].tokenize('.').last(),isSynced)
-                        ruleSetService.updateRule(ruleSetFolder.name,ruleFile.name[0..<ruleFile.name.lastIndexOf(".json")],rule,isSynced)
+                        ruleSetService.addRule(ruleSetFolder.name,rule.name,rule["class"].tokenize('.').last(),isSynced)
+                        ruleSetService.updateRule(ruleSetFolder.name,rule.name,rule,isSynced)
                     }
                     restore.ruleSets << [ "${ruleSetFolder.name}": rs.collect { rule -> 
                             rule.ruleSet = ruleSetFolder.name
@@ -98,6 +99,7 @@ class ConfigService {
                     chainService.addChain(chainFolder.name,isSynced)
                     chainFolder.eachFile(FileType.FILES) { linkFile ->
                         def link = JSON.parse(linkFile.text)
+                        link.sequenceNumber = linkFile.name[0..<linkFile.name.lastIndexOf(".json")].toLong()
                         links << link
                     }
                     restore.chains << [
@@ -119,12 +121,13 @@ class ConfigService {
             ChainServiceHandler.withTransaction { status ->
                 chainServiceHandlersFolder.eachFile(FileType.FILES) { chainServiceHandlerFile ->
                     def chainServiceHandler = JSON.parse(chainServiceHandlerFile.text)
+                    chainServiceHandler.name = chainServiceHandlerFile.name[0..<chainServiceHandlerFile.name.lastIndexOf(".json")]
                     restore.chainServiceHandlers << (chainServiceHandler as Map).inject([isSynced: isSynced]) {c,k,v -> 
                         c[k] = v
                         return c
                     }
-                    chainServiceHandlerService.addChainServiceHandler(chainServiceHandlerFile.name[0..<chainServiceHandlerFile.name.lastIndexOf(".json")],chainServiceHandler.chain,isSynced) 
-                    chainServiceHandlerService.modifyChainServiceHandler(chainServiceHandlerFile.name[0..<chainServiceHandlerFile.name.lastIndexOf(".json")],chainServiceHandler,isSynced)
+                    chainServiceHandlerService.addChainServiceHandler(chainServiceHandler.name,chainServiceHandler.chain,isSynced) 
+                    chainServiceHandlerService.modifyChainServiceHandler(chainServiceHandler.name,chainServiceHandler,isSynced)
                 }
                 status.flush()
             }
@@ -133,6 +136,7 @@ class ConfigService {
             restore.jobs = []
             jobsFolder.eachFile(FileType.FILES) { jobFile ->
                 def job = JSON.parse(jobFile.text)
+                job.name = jobFile.name[0..<jobFile.name.lastIndexOf(".json")]
                 restore.jobs << job
                 def badJob = false
                 job.triggers.eachWithIndex { t,i->
