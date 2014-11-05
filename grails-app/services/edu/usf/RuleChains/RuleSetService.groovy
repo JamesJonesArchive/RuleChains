@@ -230,39 +230,7 @@ class RuleSetService {
         if(!!name && !!ruleSetName && !!ruleUpdate) {
             def ruleSet = RuleSet.findByName(ruleSetName)
             if(!!ruleSet) {
-                def rule = ruleSet.rules.collect { r ->
-                    def er
-                    switch(r) {
-                    case { it instanceof SQLQuery }:
-                        er = r as SQLQuery
-                        break
-                    case { it instanceof Groovy }:
-                        er = r as Groovy
-                        break
-                    case { it instanceof Python }:
-                        er = r as Python
-                        break
-                    case { it instanceof Ruby }:
-                        er = r as Ruby
-                        break
-                    case { it instanceof PHP }:
-                        er = r as PHP
-                        break
-                    case { it instanceof StoredProcedureQuery }:
-                        er = r as StoredProcedureQuery
-                        break
-                    case { it instanceof DefinedService }:                            
-                        er = r as DefinedService
-                        break
-                    case { it instanceof Snippet }:
-                        er = r as Snippet
-                        break
-                    }
-                    er.refresh()
-                    return er
-                }.find {
-                    it.name == name
-                }
+                def rule = Rule.findByRuleSetAndName(ruleSet,name)
                 if(!!rule) {
                     rule.isSynced = isSynced
                     if("chain" in ruleUpdate) {
@@ -277,7 +245,7 @@ class RuleSetService {
                     if(!rule.save(failOnError:false, flush: true, validate: true)) {
                         rule.errors.allErrors.each {
                             println it
-                        }           
+                        }
                         return [ error: "'${rule.errors.fieldError.field}' value '${rule.errors.fieldError.rejectedValue}' rejected" ]                        
                     }
                     return [ rule: (GrailsUtil.environment in ['test'])?rule:getRule(ruleSetName,rule.name).rule ]
@@ -300,36 +268,7 @@ class RuleSetService {
         if(!!name && !!ruleSetName && !!nameUpdate) {
             def ruleSet = RuleSet.findByName(ruleSetName)
             if(!!ruleSet) {
-                def rule = ruleSet.rules.collect { r ->
-                    def er
-                    switch(r) {
-                    case { it instanceof SQLQuery }:
-                        er = r as SQLQuery
-                        break
-                    case { it instanceof Groovy }:
-                        er = r as Groovy
-                        break
-                    case { it instanceof Python }:
-                        er = r as Python
-                        break
-                    case { it instanceof Ruby }:
-                        er = r as Ruby
-                        break
-                    case { it instanceof StoredProcedureQuery }:
-                        er = r as StoredProcedureQuery
-                        break
-                    case { it instanceof DefinedService }:                            
-                        er = r as DefinedService
-                        break
-                    case { it instanceof Snippet }:
-                        er = r as Snippet
-                        break
-                    }
-                    er.refresh()
-                    return er
-                }.find {
-                    it.name == name
-                }
+                def rule = Rule.findByRuleSetAndName(ruleSet,name)
                 if(!!rule) {
                     rule.name = nameUpdate
                     rule.isSynced = isSynced
@@ -548,36 +487,7 @@ class RuleSetService {
             def ruleSet = RuleSet.findByName(ruleSetName)
             ruleSet.isSynced = isSynced
             if(!!ruleSet) {
-                def rule = ruleSet.rules.collect { r ->
-                    def er
-                    switch(r) {
-                    case { it instanceof SQLQuery }:
-                        er = r as SQLQuery
-                        break
-                    case { it instanceof Groovy }:
-                        er = r as Groovy
-                        break
-                    case { it instanceof Python }:
-                        er = r as Python
-                        break
-                    case { it instanceof Ruby }:
-                        er = r as Ruby
-                        break
-                    case { it instanceof StoredProcedureQuery }:
-                        er = r as StoredProcedureQuery
-                        break
-                    case { it instanceof DefinedService }:                            
-                        er = r as DefinedService
-                        break
-                    case { it instanceof Snippet }:
-                        er = r as Snippet
-                        break
-                    }
-                    er.refresh()
-                    return er
-                }.find {
-                    it.name == name
-                }
+                def rule = Rule.findByRuleSetAndName(ruleSet,name)
                 if(!!rule) {
                     rule.isSynced = isSynced
                     def targetRuleSet = RuleSet.findByName(nameUpdate)

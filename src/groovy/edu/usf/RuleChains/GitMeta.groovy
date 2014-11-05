@@ -108,7 +108,6 @@ class GitMeta {
                             j.setPrettyPrint(true)
                             return j
                         }.call([
-                                name: domainDelegate.name,
                                 rule: domainDelegate?.rule,
                                 "class": domainDelegate['class']
                             ] as JSON)                        
@@ -119,7 +118,6 @@ class GitMeta {
                             j.setPrettyPrint(true)
                             return j
                         }.call([
-                                name: domainDelegate.name,
                                 rule: domainDelegate?.rule,
                                 "class": domainDelegate['class']
                             ] as JSON)                        
@@ -130,7 +128,6 @@ class GitMeta {
                             j.setPrettyPrint(true)
                             return j
                         }.call([
-                                name: domainDelegate.name,
                                 rule: domainDelegate?.rule,
                                 "class": domainDelegate['class']
                             ] as JSON)                        
@@ -141,7 +138,6 @@ class GitMeta {
                             j.setPrettyPrint(true)
                             return j
                         }.call([
-                                name: domainDelegate.name,
                                 rule: domainDelegate?.rule,
                                 "class": domainDelegate['class']
                             ] as JSON)                        
@@ -152,7 +148,6 @@ class GitMeta {
                             j.setPrettyPrint(true)
                             return j
                         }.call([
-                                name: delegate.name,
                                 rule: delegate?.rule,
                                 "class": delegate['class']
                             ] as JSON)                        
@@ -163,7 +158,6 @@ class GitMeta {
                             j.setPrettyPrint(true)
                             return j
                         }.call([
-                                name: domainDelegate.name,
                                 rule: domainDelegate?.rule,
                                 "class": domainDelegate['class'],
                                 "closure": domainDelegate['closure']
@@ -177,7 +171,6 @@ class GitMeta {
                             j.setPrettyPrint(true)
                             return j
                         }.call([
-                                name: domainDelegate.name,
                                 method:{ m->
                                     switch(m) {
                                     case MethodEnum.GET:
@@ -240,7 +233,6 @@ class GitMeta {
                             j.setPrettyPrint(true)
                             return j
                         }.call([
-                                name: domainDelegate.name,
                                 chain: domainDelegate?.chain?.name,
                                 "class": domainDelegate['class']
                             ] as JSON)                        
@@ -465,7 +457,6 @@ class GitMeta {
                     j.setPrettyPrint(true)
                     return j
                 }.call([
-                        name: domainDelegate.name,
                         chain: domainDelegate.chain.name,
                         inputReorder: domainDelegate.inputReorder,
                         outputReorder: domainDelegate.outputReorder,
@@ -560,7 +551,6 @@ class GitMeta {
                     j.setPrettyPrint(true)
                     return j
                 }.call([
-                        sequenceNumber: domainDelegate.sequenceNumber,
                         sourceName: domainDelegate.sourceName,
                         inputReorder: domainDelegate.inputReorder,
                         outputReorder: domainDelegate.outputReorder,
@@ -747,7 +737,6 @@ class GitMeta {
                     return js                            
                 }.call([
                         group: jobKey.group,
-                        name: jobKey.name,
                         triggers: context.getScheduler().getTriggersOfJob(jobKey).collect { it.getCronExpression() },
                         chain: dataMap.getString("chain"),
                         input: dataMap.get("input"),

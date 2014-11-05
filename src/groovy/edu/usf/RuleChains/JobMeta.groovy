@@ -261,7 +261,6 @@ class JobMeta {
                                     return js                            
                                 }.call([
                                     group: jobKey.group,
-                                    name: jobKey.name,
                                     triggers: quartzScheduler.getTriggersOfJob(jobKey).collect { it.getCronExpression() },
                                     chain: dataMap.getString("chain"),
                                     input: dataMap.get("input"),
@@ -315,7 +314,6 @@ class JobMeta {
                                     return js                            
                                 }.call([
                                     group: jobKey.group,
-                                    name: jobKey.name,
                                     triggers: quartzScheduler.getTriggersOfJob(jobKey).collect { it.getCronExpression() },
                                     chain: dataMap.getString("chain"),
                                     input: dataMap.get("input"),

@@ -41,6 +41,7 @@ grails.project.dependency.resolution = {
         // compile "org.eclipse.jgit:org.eclipse.jgit:3.1.0.201310021548-r"
         // compile "net.sf.opencsv:opencsv:2.3"
         // compile "jcifs:jcifs:1.3.17"
+        compile 'org.apache.directory.api:api-all:1.0.0-M24'
         compile 'org.apache-extras.camel-extra:camel-jcifs:2.13.2'
         compile "javax.mail:mail:1.4"
         compile "com.xlson.groovycsv:groovycsv:1.0"
@@ -69,7 +70,7 @@ grails.project.dependency.resolution = {
         compile ':grails-cas-rest-client:0.3.1'
         compile ":quartz2:2.1.6.2"
         compile ":rest:0.7"
-        compile ":jgit:1.0.0a"
+        compile ":jgit:1.0.1"
         compile ":csv:0.3.1"
         runtime ":cors:1.1.6"
     }
