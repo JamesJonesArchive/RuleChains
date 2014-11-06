@@ -12,16 +12,14 @@ class ConfigController {
     def configService
     
     /**
-     * Returns an object containing rules,chains and chainServiceHandlers
+     * Returns an zip file containing rules,chains and chainServiceHandlers
      * 
      */    
     def downloadChainData() {
-        JSON.use("deep") { 
-            response.setHeader "Content-disposition", "attachment; filename=RCBackup.json"
-            response.contentType = 'application/json'
-            response.outputStream << (configService.downloadChainData() as JSON).toString(true)
-            response.outputStream.flush()        
-        }
+        response.setHeader "Content-disposition", "attachment; filename=RCBackup.zip"
+        response.contentType = 'application/zip'
+        response.outputStream << configService.downloadChainData()
+        response.outputStream.flush()        
     }
     /**
      * Takes the JSON object from the upload and merges it into the syncronized
