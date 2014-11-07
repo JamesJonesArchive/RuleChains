@@ -1219,9 +1219,7 @@
                                     dialog.dialog('close');
                                     dialog.dialog('destroy');
                                     dialog.remove();                                        
-                                    backupUpload.submit(function() {
-                                        waitDialog.dialog("open");
-                                    });
+                                    backupUpload.submit();
                                 },
                                 "Cancel": function() {
                                     $(this).dialog('close');
