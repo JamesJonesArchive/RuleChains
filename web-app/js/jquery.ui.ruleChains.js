@@ -1141,13 +1141,107 @@
                     e.preventDefault();  //stop the browser from following
                     window.location.href = 'backup/download';
                 }),
+                backupUpload =$(self.backupUpload = $('form#backupUpload',tabs.backup)),
+                mergeSelect = $(self.mergeSelect = $('select#merge',backupUpload)),
+                contentsFile =$(self.contentsFile = $('input#contents',backupUpload)).change(function() {
+                    if(contentsFile.val() !== "") {
+                        $('<div />')
+                        .data({
+                            mergeSelect: $('<select />',{
+                                id: "merge",
+                                name: "merge"
+                            }).append(
+                                $('<option />',{
+                                    value: true,
+                                    text: "Merge"
+                                })
+                            ).append(
+                                $('<option />',{
+                                    value: false,
+                                    text: "Replace"
+                                })
+                            )
+                        })
+                        .addClass('ui-state-default ui-widget-content')
+                        .append(
+                            $('<p />')
+                            .css({
+                                "text-align": "center",
+                                "margin-top": "0px",
+                                "margin-bottom": "0px",
+                                "padding": "0px"
+                            })
+                        ).dialog({
+                            autoOpen: true,
+                            bgiframe: true,
+                            resizable: false,
+                            title: 'Restore Backup',
+                            height:280,
+                            width:560,
+                            modal: true,
+                            zIndex: 3999,
+                            overlay: {
+                                backgroundColor: '#000',
+                                opacity: 0.5
+                            },
+                            open: function() {
+                                var dialog = $(this);
+                                mergeSelect.val(true);
+                                dialog.append(
+                                    $('<h3 />').html("Select Merge or Replace with Backup")
+                                ).append(
+                                    $('<table />')
+                                    .append(
+                                        $('<tbody />')
+                                        .append(
+                                            $('<tr />')
+                                            .append(
+                                                $('<td />')
+                                                .append(
+                                                    $('<label />', { 'for': 'merge', text: 'Restore Mode:' })
+                                                )
+                                            )
+                                            .append(
+                                                $('<td />')
+                                                .append(
+                                                    dialog.data().mergeSelect.css({"padding-left": "5px"}).change(function() {
+                                                        mergeSelect.val($(this).val());
+                                                    })
+                                                )
+                                            )
+                                        )
+                                    )
+                                );
+                            },
+                            buttons: {
+                                "Restore Backup": function() {
+                                    var dialog = $(this);
+                                    dialog.dialog('close');
+                                    dialog.dialog('destroy');
+                                    dialog.remove();                                        
+                                    backupUpload.submit(function() {
+                                        waitDialog.dialog("open");
+                                    });
+                                },
+                                "Cancel": function() {
+                                    $(this).dialog('close');
+                                    $(this).dialog('destroy');
+                                    $(this).remove();                        
+                                }
+                            }
+                        });                        
+                    } else {
+                        alert("That didn't work!" + contentsFile.val());
+                    }
+                }),
                 restoreButton = $(self.restoreButton = $('button#restoreButton',tabs.backup)).button({
                     text: true,
                     icons: {
                         primary: "ui-icon-arrowthick-1-n"
                     }            
                 }).click(function(){
-                    restoreFile.click();
+                    // restoreFile.click();
+                    contentsFile.click();
                 }),
                 restoreFile = $(self.restoreFile = $('input#restore')).change(function() { 
                     if(restoreFile.val() !== "") {
