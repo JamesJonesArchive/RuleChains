@@ -1,13 +1,19 @@
 package edu.usf.RuleChains
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.io.FileOutputStream
+import java.io.BufferedOutputStream
+import java.io.ByteArrayInputStream
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 import grails.converters.*
 import grails.util.DomainBuilder
 import groovy.swing.factory.ListFactory
 import groovy.json.JsonSlurper
 import groovy.io.FileType
 import grails.util.GrailsUtil
+import java.util.zip.ZipFile
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 /**
  * ConfigService provides backup and restoration of rules, chains, chainServiceHandlers
@@ -163,116 +169,153 @@ class ConfigService {
                 }
             }
         }
-        
         println restore as JSON
-        // println "Does ruleSets exist? ${ruleSetsFolder.exists()}"
     }
     /**
-     * Takes the JSON object from the upload and merges it into the syncronized
+     * Takes the Zip from the upload and merges it into the syncronized
      * Git repository and live database
      * 
      * @param   restore     A JSON Object containing rules,chains and chainServiceHandlers
      * @return              Returns a status object indicating the state of the import
      */
-    def uploadChainData(def restore,boolean isSynced = false) {
-        // def o = JSON.parse(new File('Samples/import.json').text); // Parse a JSON String
-        switch(restore) {
-            case { (("ruleSets" in it)?checkDuplicateMismatchRuleTypes(it.ruleSets):false) && (("chains" in it)?!checkSources(it.chains):false) }:
-                return [ error: "You have duplicate rules using the same name but of a different type. Modify your import so these are uniquely named in the import: ${duplicateRules(restore.ruleSets).join(',')}. You need to create these missing sources first or remove references to them from the import: ${missingSources(restore.chains).join(',')}"]                
-                break
-            case { (("ruleSets" in it)?checkDuplicateMismatchRuleTypes(it.ruleSets):false) }:
-                return [ error: "You have duplicate rules using the same name but of a different type. Modify your import so these are uniquely named in the import: ${duplicateRules(restore.ruleSets).join(',')}"]
-                break
-            case { (("chains" in it)?!checkSources(it.chains):false) }:
-                return [ error: "You need to create these missing sources first or remove references to them from the import: ${missingSources(restore.chains).join(',')}"]
-                break
-            default:
-                if("ruleSets" in restore) {                        
-                    restore.ruleSets.each { rs ->
-                        print rs.name
-                        def ruleSet = { r ->
-                            if("error" in r || !!!r) {
-                                r = ruleSetService.addRuleSet(rs.name,isSynced)                                
-                                if("error" in r || !!!r) {
-                                    println "Error ${(!!!r)?null:r.error}"
-                                    return null
-                                }
-                                return r.ruleSet
-                            }
-                            return r.ruleSet
-                        }.call((GrailsUtil.environment in ['test'])?RuleSet.findByName(rs.name):ruleSetService.getRuleSet(rs.name))                        
-                        if(!!!!ruleSet) {
-                            (("rules" in rs)?rs.rules:[]).each { r ->
-                                { r2 ->
-                                    if(r."class".endsWith("Snippet")) {
-                                        { c ->
-                                            if("error" in c) {
-                                                chainService.addChain(r.name,isSynced)
-                                            }
-                                        }.call(chainService.getChain(r.name))                                
-                                    }
-                                    if("error" in r2) {                                
-                                        ruleSetService.addRule(ruleSet.name,r.name,r."class".tokenize('.').last(),isSynced)                                
-                                    }
-                                    ruleSetService.updateRule(ruleSet.name,r.name,r,isSynced) 
-                                }.call(ruleSetService.getRule(ruleSet.name,r.name))                        
-                            }
-                        } else {
-                            println "error"
-                        }
-                    }
-                } else {
-                    println "no ruleSets array"
-                }
-                if("chains" in restore) {                        
-                    restore.chains.each { c ->
-                        def chain = { ch ->
-                            if("error" in ch || !!!ch) {
-                                if(!!!ch) {
-                                    return null
-                                }
-                                return chainService.addChain(c.name).chain
-                            }
-                            return ch.chain
-                        }.call((GrailsUtil.environment in ['test'])?Chain.findByName(rs.name):chainService.getChain(c.name)) 
-                        if(!!!!chain) {
-                            c.links.sort { a, b -> a.sequenceNumber <=> b.sequenceNumber }.each { l ->
-                                println "${l.sequenceNumber}"
-                                l.sequenceNumber = (!!!l.sequenceNumber)?(chain.links.max { it.sequenceNumber } + 1):l.sequenceNumber
-                                println c.name
-                                println chainService.getChainLink(c.name,l.sequenceNumber) as JSON
-                                if("error" in chainService.getChainLink(c.name,l.sequenceNumber)) {
-                                    println "Added chain link"
-                                    chainService.addChainLink(c.name,l,isSynced)
-                                    // chain.refresh()
-                                } else {
-                                    println "Modified chain link"
-                                    chainService.modifyChainLink(c.name,l.sequenceNumber,l,isSynced)
-                                }
-                                println "${l.sequenceNumber}"
-                            }
-                        } else {
-                            println "error"
-                        }
-                    }                                        
-                } else {
-                    println "no chains array"
-                }
-                return [ status: "complete"]
-                break
+    def uploadChainData(def zipis,def merge = true,boolean isSynced = false) {
+        def grailsApplication = new Chain().domainClass.grailsApplication
+        def ctx = grailsApplication.mainContext
+        def gitFolder = ctx.getResource("git").file  
+        def ruleSetsFolder = new File(gitFolder, 'ruleSets')
+        def chainsFolder = new File(gitFolder, 'chains')
+        def chainServiceHandlersFolder = new File(gitFolder, 'chainServiceHandlers')
+        def jobsFolder = new File(gitFolder, 'jobs')        
+        if(!merge) {
+            // Erase all existing stuff
+            if(ruleSetsFolder.exists()) {
+                ruleSetsFolder.deleteDir()
+            }
+            if(chainsFolder.exists()) {
+                chainsFolder.deleteDir()
+            }
+            if(chainServiceHandlersFolder.exists()) {
+                chainServiceHandlersFolder.deleteDir()
+            }
+            if(jobsFolder.exists()) {
+                jobsFolder.deleteDir()
+            }
         }
+        // Make sure all the base folders exist
+        ruleSetsFolder.mkdirs()
+        chainsFolder.mkdirs()
+        chainServiceHandlersFolder.mkdirs()
+        jobsFolder.mkdirs()
+        // Unzip the restore to temporary restore folder
+        def restoreFolder = new File(gitFolder, 'restore')
+        if(restoreFolder.exists()) {
+            restoreFolder.deleteDir()
+        }
+        def ze
+        while ((ze = zipis.getNextEntry()) != null) {
+            File file = new File(restoreFolder, ze.getName())
+            if (ze.isDirectory()) {
+                file.mkdirs()
+            } else {
+                file.getParentFile().mkdirs()
+                def fileoutputstream = new FileOutputStream(file) 
+                byte[] buf = new byte[1024]
+                def n
+                while ((n = zipis.read(buf, 0, 1024)) > -1) {
+                    fileoutputstream.write(buf, 0, n);                        
+                }
+                fileoutputstream.close()
+                zipis.closeEntry() 
+            }
+        }
+        // Merge the RuleSets
+        def tempRuleSetsFolder = new File(restoreFolder,"ruleSets")
+        if(!tempRuleSetsFolder.exists()) {
+            tempRuleSetsFolder.mkdirs()
+        }
+        tempRuleSetsFolder.eachFile(FileType.DIRECTORIES) { d ->
+            def targetRuleSetFolder = new File(ruleSetsFolder,d.name) 
+            if(!targetRuleSetFolder.exists()) {
+                targetRuleSetFolder.mkdirs()
+            }
+            d.eachFile(FileType.FILES) { f ->
+                (new File(targetRuleSetFolder,f.name)).withWriter { w ->
+                    w << new FileInputStream(f)
+                }                
+            }
+        }
+        // Merge the Chains
+        def tempChainsFolder = new File(restoreFolder,"chains")
+        if(!tempChainsFolder.exists()) {
+            tempChainsFolder.mkdirs()
+        }
+        tempChainsFolder.eachFile(FileType.DIRECTORIES) { d ->
+            def targetChainFolder = new File(chainsFolder,d.name) 
+            if(targetChainFolder.exists()) {
+                targetChainFolder.deleteDir()
+            }
+            targetChainFolder.mkdirs()
+            d.eachFile(FileType.FILES) { f ->
+                (new File(targetChainFolder,f.name)).withWriter { w ->
+                    w << new FileInputStream(f)
+                }                
+            }            
+        }
+        // Merge the ChainServiceHandlers
+        def tempChainServiceHandlersFolder = new File(restoreFolder,"chainServiceHandlers")
+        if(!tempChainServiceHandlersFolder.exists()) {
+            tempChainServiceHandlersFolder.mkdirs()
+        }
+        tempChainServiceHandlersFolder.eachFile(FileType.FILES) { f ->
+            (new File(chainServiceHandlersFolder,f.name)).withWriter { w ->
+                w << new FileInputStream(f)
+            }                
+        }
+        // Merge the Jobs
+        def tempJobsFolder = new File(restoreFolder,"jobs")
+        if(!tempJobsFolder.exists()) {
+            tempJobsFolder.mkdirs()
+        }
+        tempJobsFolder.eachFile(FileType.FILES) { f ->
+            (new File(jobsFolder,f.name)).withWriter { w ->
+                w << new FileInputStream(f)
+            }                
+        }
+        // Remove the restore folder
+        if(restoreFolder.exists()) {
+            restoreFolder.deleteDir()
+        }
+        return syncronizeDatabaseFromGit(true)
     }
     /**
-     * Returns an object containing rules,chains and chainServiceHandlers
+     * Returns an input stream containing zipped rules,chains and chainServiceHandlers
      * 
-     * @return      An object containing rules,chains and chainSeriveHandlers
+     * @return      An input stream containing zipped rules,chains and chainSeriveHandlers
      */
     def downloadChainData() {
-        return [
-            ruleSets: RuleSet.list(),
-            chains: Chain.list(),
-            chainServiceHandlers: ChainServiceHandler.list()
-        ]
+        def grailsApplication = new Chain().domainClass.grailsApplication
+        def ctx = grailsApplication.mainContext
+        def gitFolder = ctx.getResource("git").file
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream()
+            ZipOutputStream zos = new ZipOutputStream(bos)
+            gitFolder.eachFileRecurse { f ->
+                // we need to keep only relative file path, so we used substring on absolute path
+                def fileName = f.getAbsolutePath().substring(gitFolder.getAbsolutePath().length()+1, f.getAbsolutePath().length())
+                if(f.isFile() && !fileName.startsWith(".git")) {
+                    zos.putNextEntry(new ZipEntry(fileName))
+                    f.withInputStream { i ->
+                        zos << i
+                    }
+                    // Close the zip entry
+                    zos.closeEntry()
+                }
+            }
+            zos.finish()
+            return new ByteArrayInputStream( bos.toByteArray() )
+        } catch(ex) {
+            println "Error creating zip file: " + ex
+        }
     }
     /**
      * Iterates through a chain and checks to ensure all sources exist before importing

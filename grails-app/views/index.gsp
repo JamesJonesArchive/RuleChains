@@ -190,11 +190,29 @@
                 </table>
             </div>
             <div id="backup" role="main">
+                <g:if test="${params?.status}">
+                    <div style="margin-top: 20px; padding: 0pt 0.7em;" class="ui-state-highlight ui-corner-all"> 
+                    <p><span style="float: left; margin-right: 0.3em;" class="ui-icon ui-icon-info"></span>
+                    <strong>${params?.status?.capitalize()}:</strong>${params?.message}</p>
+                    </div>                    
+                </g:if>
                 <div id="backupButtonSet" style="display: inline-block;font-size:70%;">
                     <a id="backupButton" href="backup/download">Make a Backup</a>
                     <button id="restoreButton">Restore a Backup</button> 
                     <input type="file" id="restore" name="restore" size="chars" style="display:none;">
                 </div>              
+                <div data-role="fieldcontain" style="display:none;">
+                  <form action="backup/upload" name="backupUpload" id="backupUpload" method="post" enctype="multipart/form-data">
+                  <input type="hidden" value="voter" name="zipContentType" id="zipContentType" />
+                  <label for="merge">Merge?:</label>
+                  <select id="merge" name="merge">
+                      <option value="true">Merge</option>
+                      <option value="false">Replace</option>
+                  </select>
+                  <input id="contents" name="contents" type="file" value="Choose File">
+                  <input type="submit" value="Restore a Backup">
+                  </form>
+                </div>                
             </div>            
         </div>
     </body>
