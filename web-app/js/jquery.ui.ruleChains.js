@@ -1274,7 +1274,8 @@
                                     var dialog = $(this);
                                     dialog.dialog('close');
                                     dialog.dialog('destroy');
-                                    dialog.remove();                                        
+                                    dialog.remove();  
+                                    self.getWaitDialog().dialog("open");
                                     backupUpload.submit();
                                 },
                                 "Cancel": function() {
