@@ -264,24 +264,24 @@ class Chain {
                             return [ r ] 
                         }
                     }.call(linkService.justGroovy(
-                            orderedLinks[i].rule,
-                            orderedLinks[i].sourceName,
-                            orderedLinks[i].executeEnum,    
-                            orderedLinks[i].resultEnum,
-                            { e ->
-                                switch(e) {
-                                case ExecuteEnum.EXECUTE_USING_ROW: 
-                                    log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][Groovy] Execute Using Row being used"
-                                    log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][Groovy] Unmodified input for Executing Row on link ${i} is ${orderedLinks[i].input as JSON}"
-                                    log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][Groovy] Modified input for Executing Row link ${i} is ${Chain.rearrange(orderedLinks[i].input,orderedLinks[i].inputReorder) as JSON}"
-                                    return Chain.rearrange(orderedLinks[i].input,orderedLinks[i].inputReorder)
-                                    break
-                                default:
-                                    return [:]
-                                    break
-                                }                                        
-                            }.call(orderedLinks[i].executeEnum)
-                        )).collect {
+                        orderedLinks[i].rule,
+                        orderedLinks[i].sourceName,
+                        orderedLinks[i].executeEnum,    
+                        orderedLinks[i].resultEnum,
+                        { e ->
+                            switch(e) {
+                            case ExecuteEnum.EXECUTE_USING_ROW: 
+                                log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][Groovy] Execute Using Row being used"
+                                log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][Groovy] Unmodified input for Executing Row on link ${i} is ${orderedLinks[i].input as JSON}"
+                                log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][Groovy] Modified input for Executing Row link ${i} is ${Chain.rearrange(orderedLinks[i].input,orderedLinks[i].inputReorder) as JSON}"
+                                return Chain.rearrange(orderedLinks[i].input,orderedLinks[i].inputReorder)
+                                break
+                            default:
+                                return [:]
+                                break
+                            }                                        
+                        }.call(orderedLinks[i].executeEnum)
+                    )).collect {
                         if(orderedLinks[i].resultEnum in [ResultEnum.APPENDTOROW]) {
                             return Chain.rearrange((([:] << orderedLinks[i].input) << it),orderedLinks[i].outputReorder)
                         } else if(orderedLinks[i].resultEnum in [ResultEnum.PREPENDTOROW]) {
@@ -312,24 +312,24 @@ class Chain {
                             return [ r ] 
                         }
                     }.call(linkService.justPython(
-                            orderedLinks[i].rule,
-                            orderedLinks[i].sourceName,
-                            orderedLinks[i].executeEnum,    
-                            orderedLinks[i].resultEnum,
-                            { e ->
-                                switch(e) {
-                                case ExecuteEnum.EXECUTE_USING_ROW: 
-                                    log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][Python] Execute Using Row being used"
-                                    log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][Python] Unmodified input for Executing Row on link ${i} is ${orderedLinks[i].input as JSON}"
-                                    log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][Python] Modified input for Executing Row link ${i} is ${Chain.rearrange(orderedLinks[i].input,orderedLinks[i].inputReorder) as JSON}"
-                                    return Chain.rearrange(orderedLinks[i].input,orderedLinks[i].inputReorder)
-                                    break
-                                default:
-                                    return [:]
-                                    break
-                                }                                        
-                            }.call(orderedLinks[i].executeEnum)
-                        )).collect {
+                        orderedLinks[i].rule,
+                        orderedLinks[i].sourceName,
+                        orderedLinks[i].executeEnum,    
+                        orderedLinks[i].resultEnum,
+                        { e ->
+                            switch(e) {
+                            case ExecuteEnum.EXECUTE_USING_ROW: 
+                                log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][Python] Execute Using Row being used"
+                                log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][Python] Unmodified input for Executing Row on link ${i} is ${orderedLinks[i].input as JSON}"
+                                log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][Python] Modified input for Executing Row link ${i} is ${Chain.rearrange(orderedLinks[i].input,orderedLinks[i].inputReorder) as JSON}"
+                                return Chain.rearrange(orderedLinks[i].input,orderedLinks[i].inputReorder)
+                                break
+                            default:
+                                return [:]
+                                break
+                            }                                        
+                        }.call(orderedLinks[i].executeEnum)
+                    )).collect {
                         if(orderedLinks[i].resultEnum in [ResultEnum.APPENDTOROW]) {
                             return Chain.rearrange((([:] << orderedLinks[i].input) << it),orderedLinks[i].outputReorder)
                         } else if(orderedLinks[i].resultEnum in [ResultEnum.PREPENDTOROW]) {

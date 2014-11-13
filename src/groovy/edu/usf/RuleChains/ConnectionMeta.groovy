@@ -93,6 +93,17 @@ class ConnectionMeta {
             return [ rcGlobals: (grailsApplication.config.ruleChains.globals)?grailsApplication.config.ruleChains.globals:[:] ] + map + [ rcLocals: [chain: delegate.name] ]
         }
         /**
+         * Retrieves the global variables hashmap from the config called "rcGlobals"
+         * and combines it with an optional provided Map and some local variables on the 
+         * current local environment.
+         * 
+         * @param  map       An optional parameter to add key/value pairs to the merge of global and local variables
+         * @return           Returns an Map containing global,local and provided key/value pairs
+         */
+        GroovyRuleEnvironmentService.metaClass.getMergedGlobals { map=[:] ->      
+            return [ rcGlobals: (grailsApplication.config.ruleChains.globals)?grailsApplication.config.ruleChains.globals:[:] ] + map
+        }
+        /**
          * Returns the config string of imports available in Groovy Rule scripts
          * 
          * @return   A string block of import statements
