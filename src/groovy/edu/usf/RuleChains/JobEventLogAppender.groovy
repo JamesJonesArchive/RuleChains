@@ -1,9 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package edu.usf.RuleChains
 
 import org.apache.log4j.Appender
@@ -13,14 +7,22 @@ import grails.converters.*
 import java.util.regex.*
 
 /**
- *
- * @author james
- */
+ * JobEventLogAppender is the logging to database appender
+ * for executing chains.
+ * <p>
+ * Developed originally for the University of South Florida
+ * 
+ * @author <a href='mailto:james@mail.usf.edu'>James Jones</a> 
+ */ 
 class JobEventLogAppender extends AppenderSkeleton implements Appender {
     static appInitialized = false
  
     String source
- 
+    /**
+     * Modified function to handle logging to database
+     * 
+     * @param   event    A logging event
+     */
     @Override
     protected void append(LoggingEvent event) {
         // print "LOG WAS CALLED"
@@ -58,7 +60,7 @@ class JobEventLogAppender extends AppenderSkeleton implements Appender {
                         eventLog.status = matcher.group(5)
                         eventLog.save()
                     }
-                }                
+                }             
             }
         } else {
             // println "JobEventLogAppender not initialized"
