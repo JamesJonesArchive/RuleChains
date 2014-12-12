@@ -380,6 +380,8 @@ class LinkService {
         }
         return Link.withTransaction{ status ->
             def sql = getSQLSource(sourceName) // ,buildGroovyScriptCompilerConfiguration()
+            def jobInfo = (this.metaClass.respondsTo(this, "getJobInfo"))?getJobInfo():null
+            def groovyRuleEnvironmentService = getGroovyRuleEnvironmentService()
             try {
                 return {rows->
                     switch(resultEnum) {
@@ -397,22 +399,27 @@ class LinkService {
                     }
                 }.call(
                     { cl ->
-                        cl.delegate = getGroovyRuleEnvironmentService()
+                        cl.delegate = groovyRuleEnvironmentService
                         cl.resolveStrategy = Closure.DELEGATE_FIRST
-                        return cl()
-                    }.call((Closure) new GroovyShell(new Binding([
-                        sql:sql,
-                        sqls:getSQLSources(),
-                        row: input,
-                        rcGlobals: getMergedGlobals().rcGlobals
-                    ])).evaluate("""${getGroovyRuleImports()}
+                        return cl()                        
+                    }.call((Closure) new GroovyShell({ b -> 
+                            b.addToLog = { m ->
+                                groovyRuleEnvironmentService.infoLog(jobInfo,m)
+                            }
+                            return b
+                        }.call(new Binding([
+                                sql:sql,
+                                sqls:getSQLSources(),
+                                row: input,
+                                rcGlobals: getMergedGlobals().rcGlobals
+                    ]))).evaluate("""${getGroovyRuleImports()}
 
                     {->
                         sql
                         sqls
                         row
                         rcGlobals
-
+                        
                         ${rule.rule} 
                     }"""))
                 )
