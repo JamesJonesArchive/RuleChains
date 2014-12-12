@@ -16,6 +16,20 @@ class GroovyRuleEnvironmentService {
     static transactional = true
     def linkService
     /**
+     * Raw method for addToLog
+     * 
+     * @param   jobInfo    A hashmap containing the current job info
+     * @param   message    The text of the log entry itself
+     */
+    def infoLog(def jobInfo,String message) {
+        if(jobInfo) {
+            print "I'm trying to log this somewhere" + jobInfo
+            log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${jobInfo.name}][INFO] ${message}"
+        } else {
+            println "Log cannot be appended!"
+        }
+    }
+    /**
      * Implements Chance Gray's EmailerEngine sendEmail method with a bind hashmap
      * 
      * @param  config     A formated config object as defined by the EmailerEngine class method
