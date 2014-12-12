@@ -95,7 +95,9 @@ log4j = {
     }
     info   additivity: false, jobEventLogAppender: [
         'grails.app.domain.edu.usf.RuleChains.Chain',
-        'grails.app.service.edu.usf.RuleChains.JobService'
+        'grails.app.services.edu.usf.RuleChains.JobService',
+        'grails.app.services.edu.usf.RuleChains.LinkService',
+        'grails.app.services.edu.usf.RuleChains.GroovyRuleEnvironmentService'
     ]
     debug  'grails.app.jobs'
     error  'org.codehaus.groovy.grails.web.servlet',        // controllers

@@ -11,3 +11,4 @@ What is RuleChains? RuleChains provides a mechanism to wrap SQL and Services as 
 2. [Configuration](../../wiki/Configuration)
 3. [How a "Link" functions](../../wiki/How-a-"Link"-functions)
 4. [Sample 1: Build a table and putting data in it](../../wiki/Sample-1:-Build-a-table-and-putting-data-in-it)
+5. [Groovy Rule Magic](../../wiki/Groovy-Rule-Magic)
