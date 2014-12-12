@@ -132,7 +132,7 @@ class Chain {
      * @return                  An array of objects
      */
     def execute(def input = [[:]],List<Link> orderedLinks = getOrderedLinks()) {
-        println "I'm running"
+        println "I'm running ${jobInfo}"
         log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][START_EXECUTE] Chain ${jobInfo.chain}:${jobInfo.suffix}"
         log.info "[Chain:${jobInfo.chain}:${jobInfo.suffix}][${name}][SUMMARY] JobInfo ${jobInfo as JSON}"
         if(!!!orderedLinks) {
@@ -140,6 +140,9 @@ class Chain {
         }
         
         def linkService = new LinkService()
+        linkService.metaClass.getJobInfo {->
+            return jobInfo + [ name: name ]
+        }
         ((!!input)?input:[[:]]).each { row ->
             /**
              * Pre-populate input based on incoming data array
