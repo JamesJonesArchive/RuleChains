@@ -64,6 +64,24 @@ class JobService {
                     jel.line = "[${jel.currentOperation}] ${jel.status}"
                     return (GrailsUtil.environment in ['test'])?jel.properties['logTime','line','id']:jel.subMap(['logTime','line','id'])
                 },
+                timing: { t ->
+                    t.duration = TimeCategory.minus(t.endTime, t.startTime).toString()
+                    return t
+                }.call(
+                    [ endTime: JobEventLog.createCriteria().get {
+                        eq('scheduledChain',chain)
+                        eq('scheduledUniqueJobId',suffix)
+                        projections {
+                            max("dateCreated")
+                        }
+                    },startTime : JobEventLog.createCriteria().get {
+                        eq('scheduledChain',chain)
+                        eq('scheduledUniqueJobId',suffix)
+                        projections {
+                            min("dateCreated")
+                        }
+                    }]
+                ),
                 jobHistories: getJobHistories().jobHistories,
                 total: JobEventLog.countByScheduledChainAndScheduledUniqueJobId(chain,suffix)
             ]
@@ -113,6 +131,24 @@ class JobService {
                     return (GrailsUtil.environment in ['test'])?jl.properties['logTime','duration','ruleName','line','id']:jl.subMap(['logTime','duration','ruleName','line','id'])
                 }.reverse(),
                 jobHistories: getJobHistories().jobHistories,
+                timing: { t ->
+                    t.duration = TimeCategory.minus(t.endTime, t.startTime).toString()
+                    return t
+                }.call(
+                    [ endTime: JobEventLog.createCriteria().get {
+                        eq('scheduledChain',chain)
+                        eq('scheduledUniqueJobId',suffix)
+                        projections {
+                            max("dateCreated")
+                        }
+                    },startTime : JobEventLog.createCriteria().get {
+                        eq('scheduledChain',chain)
+                        eq('scheduledUniqueJobId',suffix)
+                        projections {
+                            min("dateCreated")
+                        }
+                    }]
+                ),
                 total: JobEventLog.findAllByScheduledChainAndScheduledUniqueJobIdAndStatusLikeAndCurrentOperationInList(chain,suffix,'Detected a % for%',ruleFilter).size()
             ]
         }
@@ -128,25 +164,10 @@ class JobService {
                 eq('currentOperation','SUMMARY')
             }.collect { jel ->
                 def jh = jel.getJobInfo()
-                jh.endTime = JobEventLog.createCriteria().get {
-                    eq('scheduledChain',jel.scheduledChain)
-                    eq('scheduledUniqueJobId',jel.scheduledUniqueJobId)
-                    projections {
-                        max("dateCreated")
-                    }
-                }
-                jh.startTime = JobEventLog.createCriteria().get {
-                    eq('scheduledChain',jel.scheduledChain)
-                    eq('scheduledUniqueJobId',jel.scheduledUniqueJobId)
-                    projections {
-                        min("dateCreated")
-                    }
-                }
-                jh.duration = TimeCategory.minus(jh.endTime, jh.startTime).toString()
                 jh.name = "${jel.scheduledChain}:${jel.scheduledUniqueJobId}"
-                jh.id = jel.id
+                jh.id = jh.name
                 return jh
-            }
+            }.unique()
         ]
     }
     /**
