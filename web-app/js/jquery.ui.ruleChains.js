@@ -156,87 +156,6 @@
                         jobHistoryId = select.val(),
                         jobHistoryName = select.find('option:selected').text();
                     if(jobHistoryId !== "") {
-                        self.jobChainRuleTimingsSummaryHeader.each(function() {
-                            var header = $(this),
-                            headerData = header.data(),
-                            jobHistory = $.grep(select.data('jobHistories'),function(jh,i) { return jh.id.toString() === jobHistoryId.toString(); })[0];
-                            if("dataTable" in headerData) {
-                                headerData.dataTable.fnDestroy();
-                                header.removeData("dataTable");
-                            }
-                            header
-                            .empty()
-                            .append(
-                                $('<th />',{
-                                    "colspan": "3"
-                                })
-                                .append(
-                                    $(headerData.table = $('<table />'))
-                                    .append(
-                                        $('<thead />')
-                                        .append(
-                                            $('<tr />')
-                                            .append(
-                                                $('<th />').html('chain')
-                                            )
-                                            .append(
-                                                $('<th />').html('cron')
-                                            )
-                                            .append(
-                                                $('<th />').html('fireTime')
-                                            )
-                                            .append(
-                                                $('<th />').html('scheduledFireTime')
-                                            )
-                                            .append(
-                                                $('<th />').html('startTime')
-                                            )
-                                            .append(
-                                                $('<th />').html('endTime')
-                                            )
-                                            .append(
-                                                $('<th />').html('duration')
-                                            )
-                                        )
-                                    )
-                                    .append(
-                                        $('<tbody />')
-                                        .append(
-                                            $('<tr />')
-                                            .append(
-                                                $('<td />').html(jobHistory.chain)
-                                            )
-                                            .append(
-                                                $('<td />').html(jobHistory.cron)
-                                            )
-                                            .append(
-                                                $('<td />').html(jobHistory.fireTime)
-                                            )
-                                            .append(
-                                                $('<td />').html(jobHistory.scheduledFireTime)
-                                            )
-                                            .append(
-                                                $('<td />').html(jobHistory.startTime)
-                                            )
-                                            .append(
-                                                $('<td />').html(jobHistory.endTime)
-                                            )
-                                            .append(
-                                                $('<td />').html(jobHistory.duration)
-                                            )
-                                        )
-                                    )
-                                )
-                            ).find('table').width('99%').end();
-                            headerData.dataTable = headerData.table.dataTable({
-                                "bJQueryUI": true,
-                                "asStripeClasses": [ 'ui-priority-primary', 'ui-priority-secondary' ],
-                                "sDom": "rt",
-                                "aoColumnDefs": [
-                                    { "sType": "date", "aTargets": [ 2,3 ] }
-                                ]
-                            });
-                        }).fadeIn();
                         $.ruleChains.job.GETgetJobRuleTimings({
                                 name: jobHistoryName,
                                 offset: self.jobChainRuleTimingsDataTable.fnSettings()._iDisplayStart,
@@ -244,9 +163,90 @@
                             },
                             function(jobLogs) {
                                 if("jobLogs" in jobLogs) {
+                                    self.jobChainRuleTimingsSummaryHeader.each(function() {
+                                        var header = $(this),
+                                        headerData = header.data(),
+                                        jobHistory = $.grep(select.data('jobHistories'),function(jh,i) { return jh.id.toString() === jobHistoryId.toString(); })[0];
+                                        if("dataTable" in headerData) {
+                                            headerData.dataTable.fnDestroy();
+                                            header.removeData("dataTable");
+                                        }
+                                        header
+                                        .empty()
+                                        .append(
+                                            $('<th />',{
+                                                "colspan": "3"
+                                            })
+                                            .append(
+                                                $(headerData.table = $('<table />'))
+                                                .append(
+                                                    $('<thead />')
+                                                    .append(
+                                                        $('<tr />')
+                                                        .append(
+                                                            $('<th />').html('chain')
+                                                        )
+                                                        .append(
+                                                            $('<th />').html('cron')
+                                                        )
+                                                        .append(
+                                                            $('<th />').html('fireTime')
+                                                        )
+                                                        .append(
+                                                            $('<th />').html('scheduledFireTime')
+                                                        )
+                                                        .append(
+                                                            $('<th />').html('startTime')
+                                                        )
+                                                        .append(
+                                                            $('<th />').html('endTime')
+                                                        )
+                                                        .append(
+                                                            $('<th />').html('duration')
+                                                        )
+                                                    )
+                                                )
+                                                .append(
+                                                    $('<tbody />')
+                                                    .append(
+                                                        $('<tr />')
+                                                        .append(
+                                                            $('<td />').html(jobHistory.chain)
+                                                        )
+                                                        .append(
+                                                            $('<td />').html(jobHistory.cron)
+                                                        )
+                                                        .append(
+                                                            $('<td />').html(jobHistory.fireTime)
+                                                        )
+                                                        .append(
+                                                            $('<td />').html(jobHistory.scheduledFireTime)
+                                                        )
+                                                        .append(
+                                                            $('<td />').html(jobLogs.timing.startTime)
+                                                        )
+                                                        .append(
+                                                            $('<td />').html(jobLogs.timing.endTime)
+                                                        )
+                                                        .append(
+                                                            $('<td />').html(jobLogs.timing.duration)
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                        ).find('table').width('99%').end();
+                                        headerData.dataTable = headerData.table.dataTable({
+                                            "bJQueryUI": true,
+                                            "asStripeClasses": [ 'ui-priority-primary', 'ui-priority-secondary' ],
+                                            "sDom": "rt",
+                                            "aoColumnDefs": [
+                                                { "sType": "date", "aTargets": [ 2,3 ] }
+                                            ]
+                                        });
+                                    }).fadeIn();
                                     self.jobChainRuleTimingHistorySelect.data(jobLogs);
                                     self.jobChainRuleTimingsDataTable.fnClearTable();
-                                    self.jobChainRuleTimingsDataTable.fnAddData(jobLogs.jobLogs);
+                                    self.jobChainRuleTimingsDataTable.fnAddData(jobLogs.jobLogs);                                
                                 } else {
                                     alert(jobLogs.error);
                                 }
@@ -375,87 +375,6 @@
                     removeJobHistoryButton.button("option","disabled",(jobHistoryId === ""));
                     // ruleSetRefreshButton.button("option","disabled",(ruleSetId === ""));
                     if(jobHistoryId !== "") {
-                        self.jobHistorySummaryHeader.each(function() {
-                            var header = $(this),
-                            headerData = header.data(),
-                            jobHistory = $.grep(select.data('jobHistories'),function(jh,i) { return jh.id.toString() === jobHistoryId.toString(); })[0];
-                            if("dataTable" in headerData) {
-                                headerData.dataTable.fnDestroy();
-                                header.removeData("dataTable");
-                            }
-                            header
-                            .empty()
-                            .append(
-                                $('<th />',{
-                                    "colspan": "2"
-                                })
-                                .append(
-                                    $(headerData.table = $('<table />'))
-                                    .append(
-                                        $('<thead />')
-                                        .append(
-                                            $('<tr />')
-                                            .append(
-                                                $('<th />').html('chain')
-                                            )
-                                            .append(
-                                                $('<th />').html('cron')
-                                            )
-                                            .append(
-                                                $('<th />').html('fireTime')
-                                            )
-                                            .append(
-                                                $('<th />').html('scheduledFireTime')
-                                            )
-                                            .append(
-                                                $('<th />').html('startTime')
-                                            )
-                                            .append(
-                                                $('<th />').html('endTime')
-                                            )
-                                            .append(
-                                                $('<th />').html('duration')
-                                            )
-                                        )
-                                    )
-                                    .append(
-                                        $('<tbody />')
-                                        .append(
-                                            $('<tr />')
-                                            .append(
-                                                $('<td />').html(jobHistory.chain)
-                                            )
-                                            .append(
-                                                $('<td />').html(jobHistory.cron)
-                                            )
-                                            .append(
-                                                $('<td />').html(jobHistory.fireTime)
-                                            )
-                                            .append(
-                                                $('<td />').html(jobHistory.scheduledFireTime)
-                                            )
-                                            .append(
-                                                $('<td />').html(jobHistory.startTime)
-                                            )
-                                            .append(
-                                                $('<td />').html(jobHistory.endTime)
-                                            )
-                                            .append(
-                                                $('<td />').html(jobHistory.duration)
-                                            )
-                                        )
-                                    )
-                                )
-                            ).find('table').width('99%').end();
-                            headerData.dataTable = headerData.table.dataTable({
-                                "bJQueryUI": true,
-                                "asStripeClasses": [ 'ui-priority-primary', 'ui-priority-secondary' ],
-                                "sDom": "rt",
-                                "aoColumnDefs": [
-                                    { "sType": "date", "aTargets": [ 2,3 ] }
-                                ]
-                            });
-                        }).fadeIn();
                         $.ruleChains.job.GETgetJobLogs({
                                 name: jobHistoryName,
                                 offset: self.jobHistoriesDataTable.fnSettings()._iDisplayLength,
@@ -463,6 +382,87 @@
                             },
                             function(jobLogs) {
                                 if("jobLogs" in jobLogs) {
+                                    self.jobHistorySummaryHeader.each(function() {
+                                        var header = $(this),
+                                        headerData = header.data(),
+                                        jobHistory = $.grep(select.data('jobHistories'),function(jh,i) { return jh.id.toString() === jobHistoryId.toString(); })[0];
+                                        if("dataTable" in headerData) {
+                                            headerData.dataTable.fnDestroy();
+                                            header.removeData("dataTable");
+                                        }
+                                        header
+                                        .empty()
+                                        .append(
+                                            $('<th />',{
+                                                "colspan": "2"
+                                            })
+                                            .append(
+                                                $(headerData.table = $('<table />'))
+                                                .append(
+                                                    $('<thead />')
+                                                    .append(
+                                                        $('<tr />')
+                                                        .append(
+                                                            $('<th />').html('chain')
+                                                        )
+                                                        .append(
+                                                            $('<th />').html('cron')
+                                                        )
+                                                        .append(
+                                                            $('<th />').html('fireTime')
+                                                        )
+                                                        .append(
+                                                            $('<th />').html('scheduledFireTime')
+                                                        )
+                                                        .append(
+                                                            $('<th />').html('startTime')
+                                                        )
+                                                        .append(
+                                                            $('<th />').html('endTime')
+                                                        )
+                                                        .append(
+                                                            $('<th />').html('duration')
+                                                        )
+                                                    )
+                                                )
+                                                .append(
+                                                    $('<tbody />')
+                                                    .append(
+                                                        $('<tr />')
+                                                        .append(
+                                                            $('<td />').html(jobHistory.chain)
+                                                        )
+                                                        .append(
+                                                            $('<td />').html(jobHistory.cron)
+                                                        )
+                                                        .append(
+                                                            $('<td />').html(jobHistory.fireTime)
+                                                        )
+                                                        .append(
+                                                            $('<td />').html(jobHistory.scheduledFireTime)
+                                                        )
+                                                        .append(
+                                                            $('<td />').html(jobLogs.timing.startTime)
+                                                        )
+                                                        .append(
+                                                            $('<td />').html(jobLogs.timing.endTime)
+                                                        )
+                                                        .append(
+                                                            $('<td />').html(jobLogs.timing.duration)
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                        ).find('table').width('99%').end();
+                                        headerData.dataTable = headerData.table.dataTable({
+                                            "bJQueryUI": true,
+                                            "asStripeClasses": [ 'ui-priority-primary', 'ui-priority-secondary' ],
+                                            "sDom": "rt",
+                                            "aoColumnDefs": [
+                                                { "sType": "date", "aTargets": [ 2,3 ] }
+                                            ]
+                                        });
+                                    }).fadeIn();
                                     self.jobHistorySelect.data(jobLogs);
                                     self.jobHistoriesDataTable.fnClearTable();
                                     self.jobHistoriesDataTable.fnAddData(jobLogs.jobLogs);
