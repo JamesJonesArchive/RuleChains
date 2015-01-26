@@ -17,6 +17,7 @@ import edu.usf.RuleChains.Groovy
 import edu.usf.RuleChains.JobEventLogAppender
 import org.quartz.JobListener
 import org.quartz.listeners.SchedulerListenerSupport
+import grails.converters.*
 
 class BootStrap {
     def grailsApplication
@@ -40,8 +41,17 @@ class BootStrap {
             // Added Job Listener for Git Sync'ing
             quartzScheduler.getListenerManager().addJobListener(new RuleChainsJobListener() as JobListener)
             quartzScheduler.getListenerManager().addSchedulerListener(new RuleChainsSchedulerListener())
-            print jobService.listChainJobs()
-            configService.syncronizeDatabaseFromGit()
+            def jGitSettings = grailsApplication.config?.jgit
+            if(!jGitSettings.isEmpty()) {
+                println "Building Rules from Git Repo using:"
+                println "    Git Remote URL: ${jGitSettings?.gitRemoteURL}"
+                println "    Git Branch: ${jGitSettings?.branch}"
+                configService.syncronizeDatabaseFromGit()
+            } else {
+                println "Missing jgit section in config!!!"
+                println "Check your RuleChains config file!!!"
+                println "Cannot syncronize database from Git repo!!!"
+            }
             JobEventLogAppender.appInitialized = true
         }
         switch(GrailsUtil.environment){

@@ -15,7 +15,7 @@ import org.apache.log4j.EnhancedPatternLayout
 //    grails.config.locations << "file:" + System.properties["${appName}.config.location"]
 // }
 grails.config.folder = '/usr/local/etc/grails/RuleChains'
-grails.config.locations = (new File(grails.config.folder)).listFiles().collect { "file:" + it.canonicalPath }
+grails.config.locations = (new File(grails.config.folder)).listFiles().findAll { it.name.endsWith('.groovy') }.collect { "file:" + it.canonicalPath }
 grails.project.groupId = appName // change this to alter the default package name and Maven publishing destination
 grails.mime.file.extensions = true // enables the parsing of file extensions from URLs into the request format
 grails.mime.use.accept.header = true
