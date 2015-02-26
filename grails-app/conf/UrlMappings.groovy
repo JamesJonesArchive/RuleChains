@@ -17,7 +17,7 @@ class UrlMappings {
                     action = [GET:"error", PUT:"moveRule", DELETE:"error", POST:"updateRuleName"] 
                 } 
                 "/chain"(controller:"chain",parseRequest: true){ 
-                    action = [GET:"listChains", PUT:"addChain", DELETE:"error", POST:"error"] 
+                    action = [GET:"listChains", PUT:"addChain", DELETE:"error", POST:"moveChainLink"] 
                 } 
                 "/chain/$name"(controller:"chain",parseRequest: true){ 
                     action = [GET:"getChain", PUT:"addChainLink", DELETE:"deleteChain", POST:"modifyChain"] 

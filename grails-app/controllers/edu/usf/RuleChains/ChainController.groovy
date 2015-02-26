@@ -160,6 +160,19 @@ class ChainController {
             }
         }                            
     }
+    def moveChainLink() {
+        withFormat {
+            html {
+                return chainService.moveChainLink(params.originalChainName,params.destinationChainName,params.originalSequenceNumber,params.destinationSequenceNumber)
+            }
+            xml {
+                render chainService.moveChainLink(params.originalChainName,params.destinationChainName,params.originalSequenceNumber,params.destinationSequenceNumber) as XML
+            }
+            json {
+                JSON.use("deep") { render chainService.moveChainLink(params.originalChainName,params.destinationChainName,params.originalSequenceNumber,params.destinationSequenceNumber) as JSON }
+            }
+        }
+    }
     /**
      * Updates a target links property in a chain.
      * 
