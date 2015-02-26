@@ -844,6 +844,33 @@
                         }
                     }
                 });                                                                
+            },
+            POSTmoveChainLink: function(json,callback) {
+                json = jQuery.extend(true,{
+                    originalChainName: "",
+                    destinationChainName: "",
+                    originalSequenceNumber: 1,
+                    destinationSequenceNumber: 2
+                },json);
+                $.ajax({
+                    url: '/RuleChains/chain/',
+                    type: "POST",
+                    dataType : "json",
+                    beforeSend: function (XMLHttpRequest, settings) {
+                        XMLHttpRequest.setRequestHeader("Content-Type", "application/json");
+                        XMLHttpRequest.setRequestHeader("Accept", "application/json");
+                    },
+                    data: JSON.stringify(json),
+                    success: callback,
+                    error: function (jqXHR,  textStatus, errorThrown) {
+                        if (jqXHR.status === 0) {
+                            // Session has probably expired and needs to reload and let CAS take care of the rest
+                            alert('Your session has expired, the page will need to reload and you may be asked to log back in');
+                            // reload entire page - this leads to login page
+                            window.location.reload();
+                        }
+                    }
+                });                                                                
             }
         },
         ruleSet: {
@@ -1137,7 +1164,7 @@
                         }
                     }
                 });                                
-            },
+            }
             
         }
     };

@@ -2715,50 +2715,29 @@
                                         targetSequenceNumber = dialog.data().chainDestinationSequenceNumberSelect.val(),
                                         targetChainName = dialog.data().chainDestinationSequenceNumberSelect.find('option:selected').parent().attr("label"),
                                         sourceChainName = self.chainSelect.find('option:selected').text(),
-                                        deleteJson = {
-                                            name: sourceChainName,
-                                            sequenceNumber: aData.sequenceNumber
-                                        },
-                                        addJson = {                                            
-                                            name : targetChainName,
-                                            link: {
-                                                sequenceNumber: targetSequenceNumber,
-                                                rule: {
-                                                    name: aData.rule.name
-                                                },
-                                                sourceName: aData.sourceName,
-                                                executeEnum: (aData.executeEnum.hasOwnProperty("name"))?aData.executeEnum.name:aData.executeEnum,
-                                                linkEnum: (aData.linkEnum.hasOwnProperty("name"))?aData.linkEnum.name:aData.linkEnum,
-                                                resultEnum: (aData.resultEnum.hasOwnProperty("name"))?aData.resultEnum.name:aData.resultEnum,
-                                                inputReorder: aData.inputReorder,
-                                                outputReorder: aData.outputReorder
-                                            }
+                                        moveJson = {
+                                            originalChainName: sourceChainName,
+                                            destinationChainName: targetChainName,
+                                            originalSequenceNumber: aData.sequenceNumber,
+                                            destinationSequenceNumber: targetSequenceNumber
                                         };
                                     // Remove then add back in the correct space then refresh
-                                    $.ruleChains.chain.DELETEdeleteChainLink(deleteJson,function(chain) {
+                                    $.ruleChains.chain.POSTmoveChainLink(moveJson,function(chain) {
+                                        self.linkDeleteButton.button("option","disabled",true);
+                                        self.linkMoveButton.button("option","disabled",true);
                                         if("chain" in chain) {
-                                            // self.chainDataTable.fnClearTable();
-                                            // self.chainDataTable.fnAddData(chain.chain.links);  
-                                            self.linkDeleteButton.button("option","disabled",true);
-                                            self.linkMoveButton.button("option","disabled",true);
-                                            $.ruleChains.chain.PUTaddChainLink(addJson,function(chain) {
-                                                if("chain" in chain) {
-                                                    // Change to the target chain
-                                                    self.chainSelect.children().each(function() {
-                                                        var option = $(this)
-                                                        if(option.text() == chain.chain.name) {
-                                                            option.prop('selected',true);
-                                                        } else {
-                                                            option.prop('selected',false);
-                                                        }
-                                                    }).end().trigger('change');
-                                                    dialog.dialog('close');
-                                                    dialog.dialog('destroy');
-                                                    dialog.remove();                                                                                                                    
+                                            // Change to the target chain
+                                            self.chainSelect.children().each(function() {
+                                                var option = $(this);
+                                                if(option.text() === chain.chain.name) {
+                                                    option.prop('selected',true);
                                                 } else {
-                                                    alert(chain.error);
+                                                    option.prop('selected',false);
                                                 }
-                                            });
+                                            }).end().trigger('change');
+                                            dialog.dialog('close');
+                                            dialog.dialog('destroy');
+                                            dialog.remove();                                                                                                                    
                                         } else {
                                             alert(chain.error);
                                         }
