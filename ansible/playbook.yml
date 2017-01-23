@@ -1,2 +1,4 @@
 ---
 - hosts: "{{ target_hosts }}"
+  roles:
+    - rulechains

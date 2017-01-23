@@ -1,5 +1,5 @@
 ---
-- src: ssh://git@github.com/USF-IT/cims-ansible-rulechains.git
+- src: ssh://git@github.com/USF-IT/cims-ansible-role-rulechains.git
   version: master
   scm: git
   name: rulechains
