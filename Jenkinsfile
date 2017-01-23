@@ -10,6 +10,10 @@ node('master') {
   stage('fpm') {
       sh "gem install fpm"
   }
+  
+  stage('Get Ansible Roles') {
+    sh 'ansible-galaxy install -r ansible/requirements.yml -p ansible/roles/ -f'
+  } 
 
   stage('Test') {
       // Run the maven test

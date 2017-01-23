@@ -1,0 +1,6 @@
+---
+- src: ssh://git@github.com/USF-IT/cims-ansible-rulechains.git
+  version: master
+  scm: git
+  name: rulechains
+
