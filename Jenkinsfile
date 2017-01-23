@@ -1,7 +1,7 @@
 node('master') {
   // stage 'Build and Test'
   def mvnHome = tool 'maven3'
-  env.JAVA_HOME = tool 'jdk7'
+  env.JAVA_HOME = tool 'jdk6'
   env.GRAILS_HOME = tool 'grails2.2.4'
 
   env.PATH = "${mvnHome}/bin:${env.GRAILS_HOME}/bin:${env.JENKINS_HOME}/bin:./:${env.PATH}"
