@@ -16,7 +16,7 @@ grails.project.dependency.resolution = {
         // specify dependency exclusions here; for example, uncomment this to disable ehcache:
         // excludes 'ehcache'
     }
-    log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
+    log "error" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
     checksums true // Whether to verify checksums on resolve
     legacyResolve true // whether to do a secondary resolve on plugin installation, not advised and here for backwards compatibility
     repositories {
@@ -35,11 +35,11 @@ grails.project.dependency.resolution = {
         //mavenRepo "http://download.java.net/maven/2/"
         //mavenRepo "http://repository.jboss.com/maven2/"
         // Fix failed dependencies http://stackoverflow.com/questions/28836824/grails-2-2-x-unresolved-dependencies-without-any-changes-to-previously-working-b
-        //     mavenRepo "http://repo.grails.org/grails/repo/"
+        mavenRepo "http://repo.grails.org/grails/repo/"
         // Fix failed dependencies http://stackoverflow.com/questions/28692748/error-failed-to-resolve-dependencies-grails
-        //     mavenRepo "http://repo.grails.org/grails/core"
-        //     mavenRepo "http://repo.grails.org/grails/plugins"
-        //     mavenRepo "http://repo1.maven.org/maven2/"
+        mavenRepo "http://repo.grails.org/grails/core"
+        mavenRepo "http://repo.grails.org/grails/plugins"
+        mavenRepo "http://maven.springframework.org/release"
     }
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
@@ -50,7 +50,7 @@ grails.project.dependency.resolution = {
         // compile "org.eclipse.jgit:org.eclipse.jgit:3.1.0.201310021548-r"
         // compile "net.sf.opencsv:opencsv:2.3"
         // compile "jcifs:jcifs:1.3.17"
-        // compile 'org.apache.directory.api:api-all:1.0.0-M24'
+        compile 'org.apache.directory.api:api-all:1.0.0-RC2'
         compile 'org.apache-extras.camel-extra:camel-jcifs:2.13.2'
         compile "javax.mail:mail:1.4"
         compile "com.xlson.groovycsv:groovycsv:1.0"
