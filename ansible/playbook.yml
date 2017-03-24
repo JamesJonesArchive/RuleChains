@@ -1,7 +1,7 @@
 ---
 - hosts: "{{ target_hosts }}"
   vars:
-    app_version: "{{ lookup('ini', 'app.version file=../application.properties') }}"
+    app_version: "{{ lookup('ini', 'app.version type=properties file=../application.properties') }}"
   roles:
     - { role: "mavenlibsextra", tags: ["test", "build"] }
     - { role: "rulechains", rpm_version: "{{ app_version }}" }
