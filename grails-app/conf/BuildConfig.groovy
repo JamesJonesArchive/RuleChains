@@ -46,6 +46,8 @@ grails.project.dependency.resolution = {
 
         runtime 'mysql:mysql-connector-java:5.1.33'
         runtime 'org.postgresql:postgresql:9.3-1102-jdbc41'
+        runtime "com.oracle:ojdbc6:11.2.0"
+        runtime "edu.usf.cims:emailer:0.1.0"
         // runtime 'postgresql:postgresql:9.1-901.jdbc4'
         // compile "org.eclipse.jgit:org.eclipse.jgit:3.1.0.201310021548-r"
         // compile "net.sf.opencsv:opencsv:2.3"
