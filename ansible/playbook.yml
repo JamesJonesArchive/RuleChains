@@ -4,4 +4,4 @@
     app_version: "{{ lookup('ini', 'app.version file=../application.properties') }}"
   roles:
     - { role: "mavenlibsextra", tags: ["test", "build"] }
-    - { role: "rulechains", rpm_version: "app_version" }
+    - { role: "rulechains", rpm_version: app_version }
