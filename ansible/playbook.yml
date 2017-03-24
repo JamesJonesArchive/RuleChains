@@ -1,4 +1,5 @@
 ---
 - hosts: "{{ target_hosts }}"
   roles:
+    - { role: "mavenlibsextra", tags: ["test", "build"] }
     - rulechains

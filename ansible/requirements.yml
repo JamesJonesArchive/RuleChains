@@ -1,4 +1,8 @@
 ---
+- src: ssh://git@github.com/USF-IT/cims-ansible-role-maven-libs-extra.git
+  version: master
+  scm: git
+  name: mavenlibsextra
 - src: ssh://git@github.com/USF-IT/cims-ansible-role-rulechains.git
   version: master
   scm: git
