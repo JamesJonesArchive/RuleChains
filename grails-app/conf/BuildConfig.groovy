@@ -50,11 +50,10 @@ grails.project.dependency.resolution = {
         // compile "org.eclipse.jgit:org.eclipse.jgit:3.1.0.201310021548-r"
         // compile "net.sf.opencsv:opencsv:2.3"
         // compile "jcifs:jcifs:1.3.17"
-        compile 'org.apache.directory.api:api-all:1.0.0-M24'
+        // compile 'org.apache.directory.api:api-all:1.0.0-M24'
         compile 'org.apache-extras.camel-extra:camel-jcifs:2.13.2'
         compile "javax.mail:mail:1.4"
         compile "com.xlson.groovycsv:groovycsv:1.0"
-        compile 'org.aspectj:aspectjrt:1.6.10'
         runtime 'org.jruby:jruby:1.7.15'
         runtime 'org.python:jython-standalone:2.5.3'
     }
