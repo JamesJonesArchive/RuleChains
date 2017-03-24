@@ -41,6 +41,13 @@ class BootStrap {
             // Added Job Listener for Git Sync'ing
             quartzScheduler.getListenerManager().addJobListener(new RuleChainsJobListener() as JobListener)
             quartzScheduler.getListenerManager().addSchedulerListener(new RuleChainsSchedulerListener())
+            println ""
+            println "**Defined sessionfactories**"
+            def reg = ~/^sessionFactory_/
+            grailsApplication.mainContext.beanDefinitionNames.findAll{ it.startsWith( 'sessionFactory_' ) }.each{ sfname ->
+                 println "- " + (sfname - reg)
+            }
+            println ""
             def jGitSettings = grailsApplication.config?.jgit
             if(!jGitSettings.isEmpty()) {
                 println "Building Rules from Git Repo using:"
