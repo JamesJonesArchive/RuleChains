@@ -39,6 +39,7 @@ grails.project.dependency.resolution = {
         // Fix failed dependencies http://stackoverflow.com/questions/28692748/error-failed-to-resolve-dependencies-grails
         mavenRepo "http://repo.grails.org/grails/core"
         mavenRepo "http://repo.grails.org/grails/plugins"
+        mavenRepo "http://repo1.maven.org/maven2/"
     }
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
