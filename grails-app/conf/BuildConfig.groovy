@@ -54,6 +54,7 @@ grails.project.dependency.resolution = {
         compile 'org.apache-extras.camel-extra:camel-jcifs:2.13.2'
         compile "javax.mail:mail:1.4"
         compile "com.xlson.groovycsv:groovycsv:1.0"
+        compile 'org.aspectj:aspectjrt:1.6.10'
         runtime 'org.jruby:jruby:1.7.15'
         runtime 'org.python:jython-standalone:2.5.3'
     }
