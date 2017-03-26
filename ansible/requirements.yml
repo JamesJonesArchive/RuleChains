@@ -7,4 +7,9 @@
   version: master
   scm: git
   name: rulechains
+- src: ssh://git@github.com/USF-IT/cims-ansible-role-keytool.git
+  version: master
+  scm: git
+  name: keytool
+
 

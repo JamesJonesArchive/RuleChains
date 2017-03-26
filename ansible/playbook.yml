@@ -5,3 +5,4 @@
   roles:
     - { role: "mavenlibsextra", tags: ["test", "build"] }
     - { role: "rulechains", rpm_version: "{{ app_version }}" }
+    - { role: "keytool", java_keystore_path: '/etc/tomcat/keystore.jks', tags: ["deploy"] }
