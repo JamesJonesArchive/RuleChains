@@ -25,6 +25,8 @@ class ChainServiceHandlerController {
      * @see    ChainServiceHandler
      */     
     def handleChainService() {
+        System.out.println("Input service parameters are:")
+        System.out.println(params as JSON)
         def handlerResult = { fparms ->
             return chainServiceHandlerService.handleChainService(params.handler,request.method,fparms)
         }.call(params.inject([:]) {m,k,v ->
