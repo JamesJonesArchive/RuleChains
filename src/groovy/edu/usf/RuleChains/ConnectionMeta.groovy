@@ -9,6 +9,7 @@ import edu.usf.RuleChains.LinkService
 import groovy.sql.Sql
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.customizers.ImportCustomizer
+import grails.converters.*
 
 /**
  * LinkMeta performs all the metaprogramming for the LinkService
@@ -90,6 +91,8 @@ class ConnectionMeta {
          * @return           Returns an Map containing global,local and provided key/value pairs
          */
         Chain.metaClass.getMergedGlobals { map=[:] ->      
+            System.out.println("Globals dump")
+            System.out.println(grailsApplication.config.ruleChains.globals as JSON)
             return [ rcGlobals: (grailsApplication.config.ruleChains.globals)?grailsApplication.config.ruleChains.globals:[:] ] + map + [ rcLocals: [chain: delegate.name] ]
         }
         /**
