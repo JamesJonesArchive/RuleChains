@@ -14,7 +14,11 @@ node('master') {
   stage('Get Ansible Roles') {
     sh 'ansible-galaxy install -r ansible/requirements.yml -p ansible/roles/ -f'
   } 
-
+  stage('Stash Deploy Related') {
+    sh "ansible-playbook -i 'localhost,' -c local --vault-password-file=${env.USF_ANSIBLE_VAULT_KEY} ansible/playbook.yml --extra-vars 'keystash=${env.USF_ANSIBLE_VAULT_KEY}' -t keystash"
+    stash name: 'keystash', includes: "rpms/ansible-vault-usf*.rpm"
+    stash name: 'ansible', includes: "ansible/**/*"
+  }
   stage('Test') {
       // Run the maven test
       // sh "ansible-playbook -i 'localhost,' -c local --vault-password-file=${env.USF_ANSIBLE_VAULT_KEY} ansible/main.yml --extra-vars 'java_home=${env.JAVA_HOME} deploy_env=${env.DEPLOY_ENV} package_revision=${env.BUILD_NUMBER}' -t 'test'"
@@ -72,7 +76,7 @@ node("rulechains") {
     sh 'yum -y install rpms/ansible-vault-usf*.rpm || exit 0'
     unstash 'ansible'
   }
-  stage('Deploy ImageFetcher and ImageService') {
+  stage('Deploy RuleChains') {
     sh "ansible-playbook -i 'localhost,' -c local --vault-password-file=${env.USF_ANSIBLE_VAULT_KEY} ansible/playbook.yml --extra-vars 'target_hosts=all java_home=${env.JAVA_HOME} deploy_env=${env.DEPLOY_ENV} package_revision=${env.BUILD_NUMBER}' -t deploy"
   }
 }

@@ -1,0 +1,14 @@
+---
+- name: Purge rpms folder
+  file: path=../rpms state=absent
+  tags:
+    - keystash  
+- name: Create rpms folder
+  file: path=../rpms state=directory mode=0755
+  tags:
+    - keystash 
+- name: Build keystash RPM
+  shell: "fpm -s dir -t rpm -n 'ansible-vault-usf' -v '1.0.0' -p ../rpms {{ keystash }}={{ keystash }}"
+  tags:
+    - keystash    
+
