@@ -93,6 +93,8 @@ class ConnectionMeta {
         Chain.metaClass.getMergedGlobals { map=[:] ->      
             System.out.println("Globals dump")
             System.out.println(grailsApplication.config.ruleChains.globals as JSON)
+            System.out.println("Raw parameters")
+            System.out.println(map as JSON)
             return [ rcGlobals: (grailsApplication.config.ruleChains.globals)?grailsApplication.config.ruleChains.globals:[:] ] + map + [ rcLocals: [chain: delegate.name] ]
         }
         /**
