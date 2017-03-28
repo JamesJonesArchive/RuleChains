@@ -56,6 +56,7 @@ class ChainServiceHandlerService {
                 def rows = [ Chain.rearrange(input,chainServiceHandler.inputReorder) ]
                 System.out.println("---the 'rows' var------")
                 System.out.println(rows as JSON)
+                Sysetm.out.println("---the rearranged rows var")
                 return rearrange(chainServiceHandler.chain.execute(rows,chainServiceHandler.chain.getOrderedLinks()),chainServiceHandler.outputReorder)
             } else {
                 return [ error: "Method '${chainServiceHandler.method.name()}' for handler '${name}' not defined" ]
