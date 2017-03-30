@@ -118,7 +118,7 @@ class ConfigService {
                             def link = JSON.parse(linkFile.text)
                             link.sequenceNumber = linkFile.name[0..<linkFile.name.lastIndexOf(".json")].toLong()
                             System.out.println("*********LINK RULE ${link.rule} -> ${link.sequenceNumber} *********")
-                            chainService.addChainLink(chainFolder.name,link,isSynced)
+                            System.out.println(chainService.addChainLink(chainFolder.name,link,isSynced) as JSON)
                             link.chain = chainFolder.name
                             link.isSynced = isSynced
                             return link
