@@ -104,6 +104,7 @@ class ConfigService {
                     println "Chain to create ${chainFolder.name}"
                     chainService.addChain(chainFolder.name,isSynced)
                     chainFolder.eachFile(FileType.FILES) { linkFile ->
+                        println(linkFile.name)
                         def link = JSON.parse(linkFile.text)
                         link.sequenceNumber = linkFile.name[0..<linkFile.name.lastIndexOf(".json")].toLong()
                         links << link
