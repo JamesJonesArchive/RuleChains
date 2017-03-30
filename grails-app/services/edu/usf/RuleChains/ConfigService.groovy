@@ -111,7 +111,7 @@ class ConfigService {
                     restore.chains << [
                         name: chainFolder.name,
                         links: links.sort { a,b -> a.sequenceNumber <=> b.sequenceNumber }.each { l ->
-                            System.out.println("IMPORTING SEQUENCENUMBER for chain: chainFolder.name -> " + l.sequenceNumber)
+                            println("IMPORTING SEQUENCENUMBER for chain: chainFolder.name -> ${l.sequenceNumber}")
                             chainService.addChainLink(chainFolder.name,l,isSynced)
                         }.collect { l ->
                             l.chain = chainFolder.name
