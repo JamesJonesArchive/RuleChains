@@ -108,6 +108,7 @@ class ConfigService {
                         def link = JSON.parse(linkFile.text)
                         link.sequenceNumber = linkFile.name[0..<linkFile.name.lastIndexOf(".json")].toLong()
                         System.out.println(link.sequenceNumber)
+                        System.out.println(link.rule)
                         links << link
                     }
                     restore.chains << [
