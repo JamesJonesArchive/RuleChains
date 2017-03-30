@@ -102,7 +102,15 @@ class ConfigService {
                 chainsFolder.eachDir{ chainFolder ->
                     def links = []
                     println "Chain to create ${chainFolder.name}"
+                    
                     chainService.addChain(chainFolder.name,isSynced)
+                    chainFolder.listFiles().sort { a,b -> 
+                      a.name[0..<a.name.lastIndexOf(".json")].toLong() <=> b.name[0..<b.name.lastIndexOf(".json")].toLong() 
+                    }.each { linkFile ->
+                      println("Debug: ${linkFile.name}")
+                    }
+                    
+          
                     chainFolder.eachFile(FileType.FILES) { linkFile ->
                         System.out.println(linkFile.name)
                         def link = JSON.parse(linkFile.text)
