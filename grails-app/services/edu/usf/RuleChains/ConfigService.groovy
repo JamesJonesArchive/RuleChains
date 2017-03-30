@@ -104,21 +104,26 @@ class ConfigService {
                     println "Chain to create ${chainFolder.name}"
                     
                     chainService.addChain(chainFolder.name,isSynced)
-                    chainFolder.listFiles().sort { a,b -> 
+                    links = chainFolder.listFiles().sort { a,b -> 
                       a.name[0..<a.name.lastIndexOf(".json")].toLong() <=> b.name[0..<b.name.lastIndexOf(".json")].toLong() 
-                    }.each { linkFile ->
-                      println("Debug: ${linkFile.name}")
-                    }
-                    
-          
-                    chainFolder.eachFile(FileType.FILES) { linkFile ->
+                    }.collect { linkFile ->
                         System.out.println(linkFile.name)
                         def link = JSON.parse(linkFile.text)
                         link.sequenceNumber = linkFile.name[0..<linkFile.name.lastIndexOf(".json")].toLong()
                         System.out.println(link.sequenceNumber)
                         System.out.println(link.rule)
-                        links << link
+                        return link
                     }
+                    
+          
+//                    chainFolder.eachFile(FileType.FILES) { linkFile ->
+//                        System.out.println(linkFile.name)
+//                        def link = JSON.parse(linkFile.text)
+//                        link.sequenceNumber = linkFile.name[0..<linkFile.name.lastIndexOf(".json")].toLong()
+//                        System.out.println(link.sequenceNumber)
+//                        System.out.println(link.rule)
+//                        links << link
+//                    }
                     restore.chains << [
                         name: chainFolder.name,
                         links: links.sort { a,b -> a.sequenceNumber <=> b.sequenceNumber }.each { l ->
