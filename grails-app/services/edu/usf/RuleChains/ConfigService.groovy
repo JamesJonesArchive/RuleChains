@@ -50,7 +50,12 @@ class ConfigService {
         Chain.withTransaction { status ->
             Chain.list().each { c ->
                 c.isSynced = isSynced
-                c.links*.isSynced = isSynced
+                // c.links*.isSynced = isSynced
+                c.links.each { l ->
+                  l.isSynced = isSynced
+                  l.delete()
+                }
+                status.flush()
                 c.delete() 
             }
             status.flush()
