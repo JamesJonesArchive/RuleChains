@@ -76,9 +76,9 @@ node("rulechains") {
     sh 'yum -y install rpms/ansible-vault-usf*.rpm || exit 0'
     unstash 'ansible'
   }
-  stage('Deploy RuleChains') {
-    sh "ansible-playbook -i 'localhost,' -c local --vault-password-file=${env.USF_ANSIBLE_VAULT_KEY} ansible/playbook.yml --extra-vars 'target_hosts=all java_home=${env.JAVA_HOME} deploy_env=${env.DEPLOY_ENV} package_revision=${env.BUILD_NUMBER}' -t deploy"
-  }
+  // stage('Deploy RuleChains') {
+  //   sh "ansible-playbook -i 'localhost,' -c local --vault-password-file=${env.USF_ANSIBLE_VAULT_KEY} ansible/playbook.yml --extra-vars 'target_hosts=all java_home=${env.JAVA_HOME} deploy_env=${env.DEPLOY_ENV} package_revision=${env.BUILD_NUMBER}' -t deploy"
+  // }
 }
 node('master') {
   stage('Build RPM artifacts') {
